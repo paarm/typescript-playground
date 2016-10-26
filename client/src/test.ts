@@ -1,6 +1,7 @@
 import {GridModel, IGridData} from './grid/gridmodel';
 import {Grid} from './grid/grid';
 
+//Test
 $(document).ready(function() {
     console.log('Document is ready');
 
