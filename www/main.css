@@ -197,27 +197,24 @@ th:hover {
 }
 
 .pg2-row {
-    /*position: absolute;*/
-    width: 100%;
-    line-height: 20px;
-    height: 25.4px;
-    overflow: auto;
+    position: absolute;
+    white-space: nowrap;
+    cursor: default;
+    overflow: hidden;
+    background-color: #aaaaaa
 }
 
 .pg2-cell {
-    display: inline-block;
     position: relative;
-    /*position: absolute;*/
+    display: inline-block;
     border: 1px solid transparent;
     border-right: 1px dotted silver;
     border-bottom-color: silver;
     padding: 1px 1px 1px 1px;
     overflow: hidden;
-    /*-o-text-overflow: ellipsis;*/
     text-overflow: ellipsis;
     vertical-align: middle;
-    z-index: 1;
-    margin: 0;
+    height: 30px;
     white-space: nowrap;
-    cursor: default;
+    cursor: default; 
 }

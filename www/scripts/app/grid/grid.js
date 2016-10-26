@@ -51,6 +51,7 @@ System.register([], function(exports_1, context_1) {
                 Grid.prototype.createList = function () {
                     if (this.modelOK) {
                         var headerColsCount = this.mGridModel.getColumnCount();
+                        console.log("Header Columns count: " + headerColsCount);
                         var lines = this.mGridModel.getRowCount();
                         this.pg2 = $("<div class='pg2' style='width: 600px; height: 500px; overflow: hidden; position: relative'></div>");
                         this.mParentContainer.append(this.pg2);
@@ -66,24 +67,25 @@ System.register([], function(exports_1, context_1) {
                         this.pg2_canvas = $("<div class='pg2-canvas' style='width: " + (headerColsCount * 103.6) + "px; height: 12000px;'></div>");
                         this.pg2_viewport.append(this.pg2_canvas);
                         for (var l = 0; l < lines; l++) {
-                            this.appendRow(this.pg2_canvas, this.buildRow(l));
+                            var row = this.buildRow(l);
+                            this.pg2_canvas.append(row);
+                            if (l == 0) {
+                                this.lineHeight = $(row).outerHeight(true);
+                            }
                         }
                     }
                 };
                 Grid.prototype.buildRow = function (modelRowIndex) {
-                    var row = $("<div class='pg2-row pg2-row-" + modelRowIndex + "' style='top: " + (30 * modelRowIndex) + "px;'></div>");
+                    var row = $("<div class='pg2-row pg2-row-" + modelRowIndex + "' style='top: " + (this.lineHeight * modelRowIndex) + "px;'></div>");
                     this.appendColumnsToRow(modelRowIndex, row);
                     return row;
                 };
                 Grid.prototype.appendColumnsToRow = function (modelRowIndex, row) {
                     var rowColsCount = this.mGridModel.getRow(modelRowIndex).columns.length;
+                    console.log("Columns count for this row: " + rowColsCount);
                     for (var i = 0, headerColsCount = this.mGridModel.getColumnCount(); i < headerColsCount && i < rowColsCount; i++) {
-                        row.append("<div class='pg2-cell pg2-col-" + i + "' style='width: 100px;'>" + this.gridModel.getRow(modelRowIndex).rowId + "/" + this.gridModel.getRow(modelRowIndex).columns[i].value + "</div>");
+                        row.append($("<div class='pg2-cell pg2-col-" + i + "' style='width: 100px;'>" + this.gridModel.getRow(modelRowIndex).rowId + "/" + this.gridModel.getRow(modelRowIndex).columns[i].value + "</div>"));
                     }
-                };
-                Grid.prototype.appendRow = function (rowContainer, row) {
-                    rowContainer.append(row);
-                    return row;
                 };
                 return Grid;
             }());
