@@ -1,0 +1,22 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target": "es5",
+        "module": "system",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "outDir": "www/scripts/app",
+        "sourceMap": true
+        ,"mapRoot": "scripts/app"
+    },
+    "include": [
+        "client/src/**/*"
+    ],
+    "exclude": [
+        "www",
+        "server",
+        "node_modules",
+        "**/*.spec.ts"
+    ]
+}

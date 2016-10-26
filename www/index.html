@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Meine Testseite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="favicon.ico">
+    <meta name="application-name" content="MeineTestseite.at"/>
+    <link rel="stylesheet" href="main.css">
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,600,400" rel="stylesheet" type="text/css">
+    <!--link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"-->
+    <script language="javascript" type="text/javascript" src="scripts/modules/jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="scripts/modules/system.js"></script>
+    <!--script language="javascript" type="text/javascript" src="scripts/dist/test.js"></script-->
+    <script>
+        SystemJS.config({
+            baseURL: 'scripts/app'
+        });
+        System.defaultJSExtensions = true;        
+        System.import('test')
+             .then(null, console.error.bind(console));
+    </script>
+    <!--script language="javascript" type="text/javascript" src="scripts/modules/tablesorter/js/jquery.tablesorter.js"></script-->
+    <!--script language="javascript" type="text/javascript" src="scripts/boot.js"></script-->
+</head>
+<body>
+    <h1>Das ist meine Index Datei</h1>
+</body>
+
+</html>

@@ -1,0 +1,223 @@
+a, abbr, acronym, address, applet, article, aside, audio, b, big, blockquote, body, canvas, caption, center, cite, code, dd, del, details, dfn, dialog, div, dl, dt, em, embed, fieldset, figcaption, figure, font, footer, form, h1, h2, h3, h4, h5, h6, header, hgroup, hr, html, i, iframe, img, ins, kbd, label, legend, li, mark, menu, meter, nav, object, ol, output, p, pre, progress, q, rp, rt, ruby, s, samp, section, small, span, strike, strong, sub, summary, sup, table, tbody, td, tfoot, th, thead, time, tr, tt, u, ul, var, video, xmp {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    /*font-size: 100%;*/
+}
+
+#keywords tbody tr { 
+  color: #555;
+}
+/*#keywords tbody tr td {
+  text-align: center;
+  padding: 15px 10px;
+}
+#keywords tbody tr td.lalign {
+  text-align: left;
+}*/
+
+.dwrapper {
+    padding: 2px;
+    overflow: hidden;
+    vertical-align: top;
+}
+
+div.ft_container {
+    width: 100%;
+    /*margin-top: 10px;*/
+}
+
+.ft_container {
+    overflow: hidden;
+    padding: 0px;
+}
+
+.ft_rel_container {
+    position: relative;
+    overflow: hidden;
+    border-width: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+.ft_rwrapper, .ft_cwrapper {
+    overflow: hidden;
+    position: absolute;
+    z-index: 1001;
+    border-width: 0px;
+    padding: 0px;
+    margin: 0px;
+    background-color: #eeeeee;
+}
+
+
+
+.ft_r, .ft_c {
+    position: relative;
+}
+
+.ft_container table {
+    border-collapse: collapse;
+}
+
+.ft_scroller {
+    overflow: auto;
+    height: 100%;
+    padding: 0px;
+    margin: 0px;
+}
+
+table th {
+    cursor: pointer;  
+}
+tr th span, tr td span {
+    white-space: nowrap;
+    margin-left: 5px;
+    /*padding-left: 5px;*/
+}
+
+td:hover {
+    background-color: #AAAA99;
+}
+
+th:hover {
+    background-color: #f1f1f1;
+}
+
+.pg-table-body tr:nth-child(even)	{ background: #fafafa; }
+.pg-table-body tr:nth-child(odd)	{ background: #fff; }
+
+.pg-table-header tr {
+    /*background-color: #4CAF50;
+    color: white;*/
+}
+/*div {
+    display: block;
+}*/
+
+.pg {
+    position: relative;
+    overflow: hidden;
+    font-family: 'Helvetica Neue Light', 'Open Sans', Helvetica;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+.pg-header {
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+.pg-body {
+    overflow-x: auto;
+    overflow-y: scroll;
+    /*height: 300px;*/
+}
+/*pg-header-table {}*/
+.pg-header {
+    color: #262626;
+    background: #f9f9f9;
+/*    border: 1px solid #e9e9e9;
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-spacing: 0px;*/
+}
+
+.pg-table-header {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.pg-header-cell {
+    padding: .3em;
+    border: 1px solid #f3f3f3;
+    overflow: hidden;
+}
+
+.pg-body {
+    border: 1px solid #f3f3f3;
+    font-weight: 100;
+}
+
+.pg-table-body {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.pg-body-cell {
+    padding: .3em;
+    border: 1px solid #f3f3f3;
+    overflow: hidden;
+}
+
+.pg-header-cell-sorteddesc::before {
+    content: " ";
+    display: block;
+    float: left;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-color: transparent transparent #009a67;
+    border-width: 0 5px 5px;
+}
+.pg-header-cell-sortedasc::before {
+    content: " ";
+    display: block;
+    float: left;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-color:  #009a67 transparent transparent;
+    border-width: 5px 5px 0;
+}
+
+
+.pg2-header-row {
+    position: relative;
+    white-space: nowrap;
+    cursor: default;
+    overflow: hidden;
+    background-color: #009a67; 
+}
+
+.pg2-header-cell {
+    position: relative;
+    display: inline-block;
+    border: 1px solid transparent;
+    border-right: 1px dotted silver;
+    border-bottom-color: silver;
+    padding: 1px 1px 1px 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    /*height: 16px;*/
+    white-space: nowrap;
+    cursor: default; 
+}
+
+.pg2-row {
+    /*position: absolute;*/
+    width: 100%;
+    line-height: 20px;
+    height: 25.4px;
+    overflow: auto;
+}
+
+.pg2-cell {
+    display: inline-block;
+    position: relative;
+    /*position: absolute;*/
+    border: 1px solid transparent;
+    border-right: 1px dotted silver;
+    border-bottom-color: silver;
+    padding: 1px 1px 1px 1px;
+    overflow: hidden;
+    /*-o-text-overflow: ellipsis;*/
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    z-index: 1;
+    margin: 0;
+    white-space: nowrap;
+    cursor: default;
+}
