@@ -10,13 +10,16 @@
         "sourceMap": true
         ,"mapRoot": "scripts/app"
     },
+    "files": [
+        "typings/index.d.ts"
+    ],
     "include": [
-        "client/src/**/*"
+        "client/src/**/*.ts"
     ],
     "exclude": [
         "www",
         "server",
-        "node_modules",
-        "**/*.spec.ts"
+        "node_modules"
+        //,"**/*.spec.ts"
     ]
 }
