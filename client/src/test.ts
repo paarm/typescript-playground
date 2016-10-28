@@ -84,5 +84,5 @@ $(document).ready(function() {
         ]
     }
     var myParentContainer = $('body');
-    var myGrid = new Grid(myParentContainer, new GridModel(myGridData)); 
+    var myGrid = new Grid(300, 164, myParentContainer, new GridModel(myGridData)); 
 });
