@@ -83,6 +83,20 @@ $(document).ready(function() {
             }    
         ]
     }
+    for (var i=0;i<5000;i++) {
+        myGridData.rows.push({
+            rowId: i,
+            columns: [
+                {
+                    value: 'column 1'
+                },
+                {
+                    value: 'column 2'
+                }
+            ]
+        });
+    }
+
     var myParentContainer = $('body');
     var myGrid = new Grid(300, 164, myParentContainer, new GridModel(myGridData)); 
 });

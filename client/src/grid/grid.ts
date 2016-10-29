@@ -1,5 +1,10 @@
 import { IGridModel, GridModel, IGridData } from './gridmodel';
 
+class DomRow {
+	constructor(public domRowElement: JQuery, public linkedModelRowIndex: number, public top: number) {
+
+	}
+}
 
 export class Grid {
 	modelOK: boolean;
@@ -7,15 +12,27 @@ export class Grid {
 	rowCount: number;
 	colsCount: number;
 	canvasHeight: number;
-	domRows: JQuery[]=[];
-	visibleRowsCount: number;
+	maxDomRows: number;
+	currentDomRows: number;
+	maxVisibleDomRows: number;
+	rollingRowBufferCount: number;
+	rollingRowBufferPixel: number;
+	domRows: DomRow[]=[];
+	scrollTop: number;
+	scrollLeft: number;
+	topDomRowIndex: number;
+	bottomDomRowIndex: number;
 	
 	constructor(private width: number, private height: number, private mParentContainer: JQuery, private mGridModel: IGridModel) {
 		this.modelOK = this.checkModel();
 		this.rowCount = this.mGridModel.getRowCount();
+		console.log("Model Rows count: " + this.rowCount);
 		this.colsCount = this.mGridModel.getColumnCount();
+		console.log("Model Columns count: " + this.colsCount);
+		this.currentDomRows=0;
+		this.topDomRowIndex=0;
 		this.createBaseList();
-		this.handleRows();
+		this.createInitialDomRows(this.maxDomRows);
 	}
 
 	get parentContainer(): JQuery {
@@ -69,49 +86,135 @@ export class Grid {
 				this.pg2_header_row.append("<div class='pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "' style='width: 100px;' onclick='onColumnHeaderClicked(this," + i + ",true)'>" + this.mGridModel.getHeaderColumn(i).value + "</div>");
 			}
 			// body
-			this.pg2_viewport = $("<div class='pg2-viewport'  onscroll='onScrollCanvas(this)' style='width: 100%; overflow: auto; position: relative; height: "+this.height+"px;'></div>");
+			this.pg2_viewport = $("<div class='pg2-viewport' style='width: 100%; overflow: auto; position: relative; height: "+this.height+"px;'></div>");
 			this.pg2.append(this.pg2_viewport);
 			this.pg2_canvas = $("<div class='pg2-canvas' style='width: " + (this.colsCount * 103.6) + "px; height: 30px;'></div>");
 			this.pg2_viewport.append(this.pg2_canvas);
 			this.measureRow();
 			this.measureCanvasHeight();
 			this.measureVisibleRows();
-			this.pg2_viewport.css('height: '+this.canvasHeight+'px');
+			this.measureMaxDomRows();
+			this.pg2_canvas.css('height',""+this.canvasHeight+"px");
+			//this.pg2_viewport.scroll({that: this}, function(eventObject: JQueryEventObject) {
+			//	eventObject.data.that.onScroll("Huhu");
+			//});
+			this.pg2_viewport.scroll({grid: this, caller: this.pg2_viewport}, 
+				(eventObject: JQueryEventObject) => {
+					eventObject.data.grid.onScroll.call(eventObject.data.grid, <JQuery>eventObject.data.caller);
+				}
+			);
 		}
 	}
+
+	onScroll(caller : JQuery) {
+		var lastScrollTop: number= this.scrollTop;
+		var lastScrollLeft: number= this.scrollLeft;
+		this.scrollTop=caller.scrollTop();
+		this.scrollLeft=caller.scrollLeft();
+		//console.log("Scroll Top: "+this.scrollTop+", Scroll Left: "+this.scrollLeft);
+		//console.log("Scroll event called "+eventObject.data.that);
+		var diffRows:number=0;
+		if (this.scrollTop>lastScrollTop) {
+			diffRows=(this.scrollTop-lastScrollTop)/this.rowHeight;
+		} else if (this.scrollTop<lastScrollTop) {
+			diffRows=(lastScrollTop-this.scrollTop)/this.rowHeight;
+		}
+		if (diffRows>0) {
+			if (diffRows<this.maxDomRows) {
+				if (this.scrollTop>lastScrollTop) {
+					while(true) {
+						var topElementDiff=this.scrollTop-this.domRows[this.topDomRowIndex].top;
+						if (topElementDiff>this.rollingRowBufferPixel) {
+							this.moveTopRowToBottom();
+						} else {
+							break;
+						}
+					}
+				} else if (this.scrollTop<lastScrollTop) {
+					while(true) {
+						var topElementDiff=this.scrollTop-this.domRows[this.topDomRowIndex].top;
+						if (topElementDiff<this.rollingRowBufferPixel) {
+							this.moveBottomRowToTop();
+						} else {
+							break;
+						}
+					}
+				}
+			} else {
+				// reset view
+			}
+		}
+		//console.log("Top Element diff: "+topElementDiff);
+	}
+	moveTopRowToBottom() {
+		console.log("move top row to bottom");
+		this.domRows[this.topDomRowIndex].top=this.domRows[this.bottomDomRowIndex].top+this.rowHeight;
+		this.domRows[this.topDomRowIndex].domRowElement.css('top',this.domRows[this.topDomRowIndex].top);
+		this.bottomDomRowIndex=this.topDomRowIndex;
+		this.topDomRowIndex++;
+		if (this.topDomRowIndex>=this.maxDomRows) {
+			this.topDomRowIndex=0;
+		}
+	}
+	moveBottomRowToTop() {
+		console.log("move bottom row to top");
+
+		this.domRows[this.bottomDomRowIndex].top=this.domRows[this.topDomRowIndex].top-this.rowHeight;
+		this.domRows[this.bottomDomRowIndex].domRowElement.css('top',this.domRows[this.bottomDomRowIndex].top);
+		this.topDomRowIndex=this.bottomDomRowIndex;
+		this.bottomDomRowIndex--;
+		if (this.bottomDomRowIndex<0) {
+			this.bottomDomRowIndex=this.maxDomRows-1;
+		}
+	}
+
 	measureRow() {
 		var dummyRow : JQuery=this.buildRow(0);
-		dummyRow.css('top: -200px');
+		dummyRow.css('top', '-200px');
 		this.pg2_canvas.append(dummyRow);
 		this.rowHeight=dummyRow.outerHeight(true);
+		console.log("Row height: "+this.rowHeight+"px");
 		this.pg2_canvas.remove('.pg2-row');
-		this.domRows.push(dummyRow);
 	}
 
 	measureCanvasHeight() {
 		this.canvasHeight=this.rowHeight*this.rowCount;
+		console.log("Canvas Height: "+this.canvasHeight);
 	}
 
 	measureVisibleRows() {
-		this.visibleRowsCount=this.height/this.rowHeight;
-		this.visibleRowsCount=Math.ceil(this.visibleRowsCount);
+		this.maxVisibleDomRows=this.height/this.rowHeight;
+		this.maxVisibleDomRows=Math.ceil(this.maxVisibleDomRows);
+		console.log("Max visible Dom rows: "+this.maxVisibleDomRows);
 	}
 
-	handleRows() {
-		for (var l = 0; l < this.rowCount; l++) {
+	measureMaxDomRows() {
+		this.maxDomRows=this.maxVisibleDomRows*2;
+		this.rollingRowBufferCount=Math.max(1, this.maxVisibleDomRows/2);
+		this.rollingRowBufferPixel=this.rollingRowBufferCount*this.rowHeight;
+		console.log("Max Dom rows: "+this.maxDomRows);
+	}
+
+	createInitialDomRows(initialDomRowsCount: number) {
+		this.topDomRowIndex=0;
+		this.bottomDomRowIndex=initialDomRowsCount-1;
+		this.currentDomRows=initialDomRowsCount;
+		for (var l = 0; l < initialDomRowsCount; l++) {
 			let row: JQuery = this.buildRow(l);
 			this.pg2_canvas.append(row);
+			let domRow=new DomRow(row, -1, this.rowHeight*l);
+			this.domRows.push(domRow);
 		}
 	}
 
-	buildRow(rowIndex: number): JQuery {
-		var row: JQuery = $("<div class='pg2-row pg2-row-" + rowIndex + "' style='top: " + (this.rowHeight * rowIndex) + "px;'></div>");
-		this.appendColumnsToRow(row);
+	buildRow(domRowIndex: number): JQuery {
+		var row: JQuery = $("<div class='pg2-row pg2-row-" + domRowIndex + "' style='top: " + (this.rowHeight * domRowIndex) + "px;'></div>");
+		this.appendColumnsToRow(row,domRowIndex);
 		return row;
 	}
-	appendColumnsToRow(row: JQuery) {
+	appendColumnsToRow(row: JQuery, domRowIndex: number) {
 		for (var i = 0; i < this.colsCount; i++) {
-			row.append($("<div class='pg2-cell pg2-col-" + i + "' style='width: 100px;'></div>"));
+			row.append($("<div class='pg2-cell pg2-col-" + i + "' style='width: 100px;'>dom row: # "+domRowIndex+"</div>"));
 		}
 	}
 }

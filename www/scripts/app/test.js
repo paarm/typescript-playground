@@ -91,8 +91,21 @@ System.register(['./grid/gridmodel', './grid/grid'], function(exports_1, context
                         }
                     ]
                 };
+                for (var i = 0; i < 5000; i++) {
+                    myGridData.rows.push({
+                        rowId: i,
+                        columns: [
+                            {
+                                value: 'column 1'
+                            },
+                            {
+                                value: 'column 2'
+                            }
+                        ]
+                    });
+                }
                 var myParentContainer = $('body');
-                var myGrid = new grid_1.Grid(myParentContainer, new gridmodel_1.GridModel(myGridData));
+                var myGrid = new grid_1.Grid(300, 164, myParentContainer, new gridmodel_1.GridModel(myGridData));
             });
         }
     }
