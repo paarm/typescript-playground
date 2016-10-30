@@ -12,91 +12,43 @@ $(document).ready(function() {
             }, 
             {
                 value: 'Überschrift 2'
+            },
+            {
+                value: 'Überschrift 3'
+            },
+            {
+                value: 'Überschrift 4'
+            },
+            {
+                value: 'Überschrift 5'
+            },
+            {
+                value: 'Überschrift 6'
             }
         ],
-        rows: [
-            { 
-                rowId: 1,
-                columns: [
-                    {
-                        value: 'Column 1'
-                    },
-                    {
-                        value: 'Column 2'
-                    }
-                ]
-            },
-            { 
-                rowId: 2,
-                columns: [
-                    {
-                        value: 'Column 1'
-                    },
-                    {
-                        value: 'Column 2'
-                    }
-                ]
-            },
-            { 
-                rowId: 3,
-                columns: [
-                    {
-                        value: 'Column 1'
-                    },
-                    {
-                        value: 'Column 2'
-                    }
-                ]
-            },
-            { 
-                rowId: 4,
-                columns: [
-                    {
-                        value: 'Column 1'
-                    },
-                    {
-                        value: 'Column 2'
-                    }
-                ]
-            },
-            { 
-                rowId: 5,
-                columns: [
-                    {
-                        value: 'Column 1'
-                    },
-                    {
-                        value: 'Column 2'
-                    }
-                ]
-            },
-            { 
-                rowId: 6,
-                columns: [
-                    {
-                        value: 'Column 1'
-                    },
-                    {
-                        value: 'Column 2'
-                    }
-                ]
-            }    
-        ]
+        rows: []
     }
-    for (var i=0;i<5000;i++) {
+    for (var i=0;i<100000;i++) {
         myGridData.rows.push({
             rowId: i,
             columns: [
                 {
                     value: 'column 1'
-                },
-                {
+                },{
                     value: 'column 2'
+                },{
+                    value: 'column 3'
+                },{
+                    value: 'column 4'
+                },{
+                    value: 'column 5'
+                },{
+                    value: 'column 6'
                 }
             ]
         });
     }
 
     var myParentContainer = $('body');
-    var myGrid = new Grid(300, 164, myParentContainer, new GridModel(myGridData)); 
+    var myGrid = new Grid(300, 500, myParentContainer, new GridModel(myGridData)); 
 });

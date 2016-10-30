@@ -31,6 +31,8 @@ export class Grid {
 		console.log("Model Columns count: " + this.colsCount);
 		this.currentDomRows=0;
 		this.topDomRowIndex=0;
+		this.scrollLeft=0;
+		this.scrollTop=0;
 		this.createBaseList();
 		this.createInitialDomRows(this.maxDomRows);
 	}
@@ -109,20 +111,27 @@ export class Grid {
 	onScroll(caller : JQuery) {
 		var lastScrollTop: number= this.scrollTop;
 		var lastScrollLeft: number= this.scrollLeft;
-		this.scrollTop=caller.scrollTop();
+		//this.scrollTop=caller.scrollTop();
 		this.scrollLeft=caller.scrollLeft();
 		//console.log("Scroll Top: "+this.scrollTop+", Scroll Left: "+this.scrollLeft);
 		//console.log("Scroll event called "+eventObject.data.that);
 		var diffRows:number=0;
-		if (this.scrollTop>lastScrollTop) {
-			diffRows=(this.scrollTop-lastScrollTop)/this.rowHeight;
-		} else if (this.scrollTop<lastScrollTop) {
-			diffRows=(lastScrollTop-this.scrollTop)/this.rowHeight;
+		if (caller.scrollTop()>lastScrollTop) {
+			diffRows=(caller.scrollTop()-lastScrollTop)/this.rowHeight;
+		} else if (caller.scrollTop()<lastScrollTop) {
+			diffRows=(lastScrollTop-caller.scrollTop())/this.rowHeight;
 		}
-		if (diffRows>0) {
+		if (diffRows>0 && diffRows>this.rollingRowBufferCount) {
+			this.scrollTop=caller.scrollTop();
+			if (this.scrollTop>(this.canvasHeight-this.height)) {
+				this.scrollTop=(this.canvasHeight-this.height);
+			}
 			if (diffRows<this.maxDomRows) {
 				if (this.scrollTop>lastScrollTop) {
 					while(true) {
+						if (this.domRows[this.bottomDomRowIndex].linkedModelRowIndex+1>=this.rowCount) {
+							break;
+						}
 						var topElementDiff=this.scrollTop-this.domRows[this.topDomRowIndex].top;
 						if (topElementDiff>this.rollingRowBufferPixel) {
 							this.moveTopRowToBottom();
@@ -132,6 +141,9 @@ export class Grid {
 					}
 				} else if (this.scrollTop<lastScrollTop) {
 					while(true) {
+						if (this.domRows[this.topDomRowIndex].linkedModelRowIndex<=0) {
+							break;
+						}
 						var topElementDiff=this.scrollTop-this.domRows[this.topDomRowIndex].top;
 						if (topElementDiff<this.rollingRowBufferPixel) {
 							this.moveBottomRowToTop();
@@ -142,6 +154,32 @@ export class Grid {
 				}
 			} else {
 				// reset view
+				var firstRowIndex: number=Math.floor(this.scrollTop/this.rowHeight);
+				console.log("First Row Index: "+firstRowIndex);
+				firstRowIndex-=this.rollingRowBufferCount;
+				if (firstRowIndex<0) {
+					firstRowIndex=0;
+				}
+				this.topDomRowIndex=0;
+				//this.bottomDomRowIndex=this.maxDomRows-1;
+				for(var i=0;i<this.maxDomRows;i++) {
+					if (firstRowIndex+i<this.rowCount) {
+						//console.log("top: "+(firstRowIndex+i)*this.rowHeight);
+						this.domRows[i].top=(firstRowIndex+i)*this.rowHeight;
+						this.domRows[i].domRowElement.css('top',this.domRows[i].top);
+						this.domRows[i].linkedModelRowIndex=firstRowIndex+i;
+						this.updateDomRowModelDataForView(i);
+						this.domRows[i].domRowElement.show();
+						this.bottomDomRowIndex=i;
+					} else {
+						console.log("Hide Row Index: "+i);
+						this.domRows[i].domRowElement.hide();
+						this.domRows[i].top=0;
+						this.domRows[i].domRowElement.css('top',this.domRows[i].top.toFixed()+"px");
+						this.domRows[i].linkedModelRowIndex=-1;
+						this.updateDomRowModelDataForView(i);
+					}
+				}
 			}
 		}
 		//console.log("Top Element diff: "+topElementDiff);
@@ -150,6 +188,10 @@ export class Grid {
 		console.log("move top row to bottom");
 		this.domRows[this.topDomRowIndex].top=this.domRows[this.bottomDomRowIndex].top+this.rowHeight;
 		this.domRows[this.topDomRowIndex].domRowElement.css('top',this.domRows[this.topDomRowIndex].top);
+		this.domRows[this.topDomRowIndex].linkedModelRowIndex=this.domRows[this.bottomDomRowIndex].linkedModelRowIndex+1;
+		this.updateDomRowModelDataForView(this.topDomRowIndex);
+		this.domRows[this.topDomRowIndex].domRowElement.show();
+
 		this.bottomDomRowIndex=this.topDomRowIndex;
 		this.topDomRowIndex++;
 		if (this.topDomRowIndex>=this.maxDomRows) {
@@ -161,11 +203,19 @@ export class Grid {
 
 		this.domRows[this.bottomDomRowIndex].top=this.domRows[this.topDomRowIndex].top-this.rowHeight;
 		this.domRows[this.bottomDomRowIndex].domRowElement.css('top',this.domRows[this.bottomDomRowIndex].top);
+		this.domRows[this.bottomDomRowIndex].linkedModelRowIndex=this.domRows[this.topDomRowIndex].linkedModelRowIndex-1;
+		this.updateDomRowModelDataForView(this.bottomDomRowIndex);
+		this.domRows[this.bottomDomRowIndex].domRowElement.show();
+
 		this.topDomRowIndex=this.bottomDomRowIndex;
 		this.bottomDomRowIndex--;
 		if (this.bottomDomRowIndex<0) {
 			this.bottomDomRowIndex=this.maxDomRows-1;
 		}
+	}
+
+	updateDomRowModelDataForView(domRowIndex:number) {
+		this.domRows[domRowIndex].domRowElement.children().first().text("Zeile: "+(this.domRows[domRowIndex].linkedModelRowIndex+1));
 	}
 
 	measureRow() {
@@ -190,7 +240,7 @@ export class Grid {
 
 	measureMaxDomRows() {
 		this.maxDomRows=this.maxVisibleDomRows*2;
-		this.rollingRowBufferCount=Math.max(1, this.maxVisibleDomRows/2);
+		this.rollingRowBufferCount=Math.max(1, Math.floor(this.maxVisibleDomRows/2));
 		this.rollingRowBufferPixel=this.rollingRowBufferCount*this.rowHeight;
 		console.log("Max Dom rows: "+this.maxDomRows);
 	}
@@ -202,7 +252,7 @@ export class Grid {
 		for (var l = 0; l < initialDomRowsCount; l++) {
 			let row: JQuery = this.buildRow(l);
 			this.pg2_canvas.append(row);
-			let domRow=new DomRow(row, -1, this.rowHeight*l);
+			let domRow=new DomRow(row, l, this.rowHeight*l);
 			this.domRows.push(domRow);
 		}
 	}
