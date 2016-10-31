@@ -8,22 +8,43 @@ $(document).ready(function() {
     var myGridData : IGridData = {
         headerColumns: [
             {
-                value: 'Überschrift 1'
+                value: 'Zeilennummer'
             }, 
             {
-                value: 'Überschrift 2'
+                value: 'Mama'
             },
             {
-                value: 'Überschrift 3'
+                value: 'Papa'
             },
             {
-                value: 'Überschrift 4'
+                value: 'Lena'
             },
             {
-                value: 'Überschrift 5'
+                value: 'Katharina'
             },
             {
-                value: 'Überschrift 6'
+                value: 'Jakob'
+            },
+            {
+                value: 'Melli'
+            },
+            {
+                value: 'Oma'
+            },
+            {
+                value: 'Opa'
+            },
+            {
+                value: 'Sophia'
+            },
+            {
+                value: 'Anika'
+            },
+            {
+                value: 'Mia'
+            },
+            {
+                value: 'Gerhard'
             }
         ],
         rows: []
@@ -44,11 +65,25 @@ $(document).ready(function() {
                     value: 'column 5'
                 },{
                     value: 'column 6'
+                },{
+                    value: 'column 7'
+                },{
+                    value: 'column 8'
+                },{
+                    value: 'column 9'
+                },{
+                    value: 'column 10'
+                },{
+                    value: 'column 11'
+                },{
+                    value: 'column 12'
+                },{
+                    value: 'column 13'
                 }
             ]
         });
     }
 
     var myParentContainer = $('body');
-    var myGrid = new Grid(300, 500, myParentContainer, new GridModel(myGridData)); 
+    var myGrid = new Grid(1200, 700, myParentContainer, new GridModel(myGridData)); 
 });

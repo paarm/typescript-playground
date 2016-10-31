@@ -168,7 +168,7 @@ th:hover {
     width: 0;
     height: 0;
     border-style: solid;
-    border-color:  #009a67 transparent transparent;
+    border-color:  #a8dba1 transparent transparent;
     border-width: 5px 5px 0;
 }
 
@@ -178,20 +178,26 @@ th:hover {
     white-space: nowrap;
     cursor: default;
     overflow: hidden;
-    background-color: #009a67; 
+    background-color: #006071;
+    /*border-top-right-radius: 20px;*/
 }
 
 .pg2-header-cell {
     position: relative;
     display: inline-block;
-    border: 1px solid transparent;
-    border-right: 1px dotted silver;
-    border-bottom-color: silver;
+    border: 1px solid #B5C8CE;
+    background-color: #167F92;
+    color: #f1f1f1;
+    /*color: #2DCABF;*/
+    /*border-right: 1px dotted silver;
+    border-bottom-color: silver;*/
     padding: 1px 1px 1px 1px;
     overflow: hidden;
     text-overflow: ellipsis;
     vertical-align: middle;
-    /*height: 16px;*/
+    text-align: center;
+    height: 30px;
+    line-height: 30px;
     white-space: nowrap;
     cursor: default; 
 }
@@ -201,20 +207,24 @@ th:hover {
     white-space: nowrap;
     cursor: default;
     overflow: hidden;
-    background-color: #aaaaaa
+    background-color: #EAF2F3;
+}
+.pg2-row-even {
+    background-color: #FEFEFE;
 }
 
 .pg2-cell {
     position: relative;
     display: inline-block;
-    border: 1px solid transparent;
-    border-right: 1px dotted silver;
-    border-bottom-color: silver;
+    border: 1px solid #B5C8CE;
+    /*border-right: 1px solid #B5C8CE;
+    border-bottom-color: #B5C8CE;*/
     padding: 1px 1px 1px 1px;
     overflow: hidden;
     text-overflow: ellipsis;
     vertical-align: middle;
     height: 30px;
+    line-height: 30px;
     white-space: nowrap;
     cursor: default; 
 }

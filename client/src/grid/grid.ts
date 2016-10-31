@@ -8,6 +8,8 @@ class DomRow {
 
 export class Grid {
 	modelOK: boolean;
+	headerHeight: number;
+	viewportHeight: number;
 	rowHeight: number;
 	rowCount: number;
 	colsCount: number;
@@ -77,18 +79,21 @@ export class Grid {
 			console.log("Header Columns count: " + this.colsCount);
 			var lines: number = this.mGridModel.getRowCount();
 
-			this.pg2 = $("<div class='pg2' style='width: 600px; height: 500px; overflow: hidden; position: relative'></div>");
+			this.pg2 = $("<div class='pg2' style='width: "+this.width+"px; height: "+this.height+"px; overflow: hidden; position: relative'></div>");
 			this.mParentContainer.append(this.pg2);
 			this.pg2_header = $("<div class='pg2-header' style='overflow: hidden; position: relative;'></div>");
 			// header
 			this.pg2.append(this.pg2_header);
-			this.pg2_header_row = $("<div class='pg2-header-row' style='width: 1600px;'></div>");
+			this.pg2_header_row = $("<div class='pg2-header-row'></div>");
 			this.pg2_header.append(this.pg2_header_row);
 			for (var i = 0; i < this.colsCount; i++) {
 				this.pg2_header_row.append("<div class='pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "' style='width: 100px;' onclick='onColumnHeaderClicked(this," + i + ",true)'>" + this.mGridModel.getHeaderColumn(i).value + "</div>");
 			}
+			this.pg2_header_row.css("width",this.pg2_header_row.children().first().innerWidth()*this.colsCount);
+			this.headerHeight=this.pg2_header_row.innerHeight();
+			this.viewportHeight=this.height-this.headerHeight;
 			// body
-			this.pg2_viewport = $("<div class='pg2-viewport' style='width: 100%; overflow: auto; position: relative; height: "+this.height+"px;'></div>");
+			this.pg2_viewport = $("<div class='pg2-viewport' style='width: 100%; overflow: auto; position: relative; height: "+this.viewportHeight+"px;'></div>");
 			this.pg2.append(this.pg2_viewport);
 			this.pg2_canvas = $("<div class='pg2-canvas' style='width: " + (this.colsCount * 103.6) + "px; height: 30px;'></div>");
 			this.pg2_viewport.append(this.pg2_canvas);
@@ -112,7 +117,10 @@ export class Grid {
 		var lastScrollTop: number= this.scrollTop;
 		var lastScrollLeft: number= this.scrollLeft;
 		//this.scrollTop=caller.scrollTop();
-		this.scrollLeft=caller.scrollLeft();
+		if (this.scrollLeft!=caller.scrollLeft()) {
+			this.scrollLeft=caller.scrollLeft();
+			this.pg2_header_row.css("left", -this.scrollLeft);
+		}
 		//console.log("Scroll Top: "+this.scrollTop+", Scroll Left: "+this.scrollLeft);
 		//console.log("Scroll event called "+eventObject.data.that);
 		var diffRows:number=0;
@@ -215,7 +223,7 @@ export class Grid {
 	}
 
 	updateDomRowModelDataForView(domRowIndex:number) {
-		this.domRows[domRowIndex].domRowElement.children().first().text("Zeile: "+(this.domRows[domRowIndex].linkedModelRowIndex+1));
+		this.domRows[domRowIndex].domRowElement.children().first().text("#: "+(this.domRows[domRowIndex].linkedModelRowIndex+1));
 	}
 
 	measureRow() {
@@ -224,7 +232,7 @@ export class Grid {
 		this.pg2_canvas.append(dummyRow);
 		this.rowHeight=dummyRow.outerHeight(true);
 		console.log("Row height: "+this.rowHeight+"px");
-		this.pg2_canvas.remove('.pg2-row');
+		this.pg2_canvas.children().first().remove();
 	}
 
 	measureCanvasHeight() {
@@ -254,11 +262,13 @@ export class Grid {
 			this.pg2_canvas.append(row);
 			let domRow=new DomRow(row, l, this.rowHeight*l);
 			this.domRows.push(domRow);
+			this.updateDomRowModelDataForView(l);
 		}
 	}
 
 	buildRow(domRowIndex: number): JQuery {
-		var row: JQuery = $("<div class='pg2-row pg2-row-" + domRowIndex + "' style='top: " + (this.rowHeight * domRowIndex) + "px;'></div>");
+		var evenodd:string=(domRowIndex%2==0)?"even":"odd";
+		var row: JQuery = $("<div class='pg2-row pg2-row-" + domRowIndex + " pg2-row-"+evenodd+"' style='top: " + (this.rowHeight * domRowIndex) + "px;'></div>");
 		this.appendColumnsToRow(row,domRowIndex);
 		return row;
 	}
