@@ -1,4 +1,4 @@
-import { IGridModel, GridModel, IGridData } from './gridmodel';
+import { IGridModel, GridModel, IGridData, IGridRow} from './gridmodel';
 
 class DomRow {
 	constructor(public domRowElement: JQuery, public linkedModelRowIndex: number, public top: number) {
@@ -87,10 +87,10 @@ export class Grid {
 			this.pg2_header_row = $("<div class='pg2-header-row'></div>");
 			this.pg2_header.append(this.pg2_header_row);
 			for (var i = 0; i < this.colsCount; i++) {
-				this.pg2_header_row.append("<div class='pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "' style='width: 100px;' onclick='onColumnHeaderClicked(this," + i + ",true)'>" + this.mGridModel.getHeaderColumn(i).value + "</div>");
+				this.pg2_header_row.append("<div class='pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "' style='width: 100px;' onclick='onColumnHeaderClicked(this," + i + ",true)'>" + this.mGridModel.getHeaderColumn(i).name + "</div>");
 			}
-			this.pg2_header_row.css("width",this.pg2_header_row.children().first().innerWidth()*this.colsCount);
-			this.headerHeight=this.pg2_header_row.innerHeight();
+			this.pg2_header_row.css("width",this.pg2_header_row.children().first().outerWidth()*this.colsCount);
+			this.headerHeight=this.pg2_header_row.outerHeight();
 			this.viewportHeight=this.height-this.headerHeight;
 			// body
 			this.pg2_viewport = $("<div class='pg2-viewport' style='width: 100%; overflow: auto; position: relative; height: "+this.viewportHeight+"px;'></div>");
@@ -223,7 +223,14 @@ export class Grid {
 	}
 
 	updateDomRowModelDataForView(domRowIndex:number) {
-		this.domRows[domRowIndex].domRowElement.children().first().text("#: "+(this.domRows[domRowIndex].linkedModelRowIndex+1));
+		if (this.domRows[domRowIndex].linkedModelRowIndex>=0) {
+			this.domRows[domRowIndex].domRowElement.children().first().text("#: "+(this.domRows[domRowIndex].linkedModelRowIndex+1));
+			let childs: JQuery=this.domRows[domRowIndex].domRowElement.children()
+			let modelGridRow: IGridRow=this.gridModel.getRow(this.domRows[domRowIndex].linkedModelRowIndex);
+			for (var i=0;i<this.colsCount;i++) {
+				childs.eq(i).text(modelGridRow.columns[i].value);
+			}
+		}
 	}
 
 	measureRow() {
@@ -241,7 +248,7 @@ export class Grid {
 	}
 
 	measureVisibleRows() {
-		this.maxVisibleDomRows=this.height/this.rowHeight;
+		this.maxVisibleDomRows=this.viewportHeight/this.rowHeight;
 		this.maxVisibleDomRows=Math.ceil(this.maxVisibleDomRows);
 		console.log("Max visible Dom rows: "+this.maxVisibleDomRows);
 	}

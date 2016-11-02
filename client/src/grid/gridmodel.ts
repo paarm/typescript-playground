@@ -3,15 +3,18 @@ interface IGridColumn {
 }
 
 interface IGridHeaderColumn {
-    value : string;
+    id: string;
+    name: string;
+    field: string;
 }
 
-interface IGridRow {
+export interface IGridRow {
     rowId: number;
     columns : Array<IGridColumn>;
 }
 
 export interface IGridData {
+    fieldValueName: string;
     headerColumns : Array<IGridHeaderColumn>;
     rows : Array<IGridRow>;
 }
@@ -54,6 +57,7 @@ export interface IGridModel {
     addRow(gridRow : IGridRow) :void;
     getRow(rowIndex : number) : IGridRow;
     getHeaderColumn(colIndex: number) : IGridHeaderColumn;
+    getFieldValueName() : string;
 }
 
 export class GridModel implements IGridModel {
@@ -74,6 +78,9 @@ export class GridModel implements IGridModel {
 
     getColumnCount() : number {
         return this.gridData.headerColumns.length;
+    }
+    getFieldValueName() :string {
+        return this.gridData.fieldValueName;
     }
     getHeaderColumn(colIndex: number) : IGridHeaderColumn {
         var rv : IGridHeaderColumn=null;

@@ -6,45 +6,59 @@ $(document).ready(function() {
     console.log('Document is ready');
 
     var myGridData : IGridData = {
+        fieldValueName: 'value',
         headerColumns: [
             {
-                value: 'Zeilennummer'
+                id: '1',
+                name: 'Zeilennummer'
             }, 
             {
-                value: 'Mama'
+                id: '1',
+                name: 'Mama'
             },
             {
-                value: 'Papa'
+                id: '1',
+                name: 'Papa'
             },
             {
-                value: 'Lena'
+                id: '1',
+                name: 'Lena'
             },
             {
-                value: 'Katharina'
+                id: '1',
+                name: 'Katharina'
             },
             {
-                value: 'Jakob'
+                id: '1',
+                name: 'Jakob'
             },
             {
-                value: 'Melli'
+                id: '1',
+                name: 'Melli'
             },
             {
-                value: 'Oma'
+                id: '1',
+                name: 'Oma'
             },
             {
-                value: 'Opa'
+                id: '1',
+                name: 'Opa'
             },
             {
-                value: 'Sophia'
+                id: '1',
+                name: 'Sophia'
             },
             {
-                value: 'Anika'
+                id: '1',
+                name: 'Anika'
             },
             {
-                value: 'Mia'
+                id: '1',
+                name: 'Mia'
             },
             {
-                value: 'Gerhard'
+                id: '1',
+                name: 'Gerhard'
             }
         ],
         rows: []
@@ -54,7 +68,7 @@ $(document).ready(function() {
             rowId: i,
             columns: [
                 {
-                    value: 'column 1'
+                    value: '#'+i
                 },{
                     value: 'column 2'
                 },{
