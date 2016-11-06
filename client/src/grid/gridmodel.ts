@@ -1,11 +1,12 @@
-interface IGridColumn {
+export interface IGridColumn {
     value : string;
 }
 
 interface IGridHeaderColumn {
     id: string;
     name: string;
-    field: string;
+    renderer?: (grid: IGridModel, row: IGridRow, column: IGridColumn)=>HTMLElement;
+    //field: string;
 }
 
 export interface IGridRow {
@@ -19,15 +20,18 @@ export interface IGridData {
     rows : Array<IGridRow>;
 }
 
-class GridColumn implements IGridColumn {
+
+
+
+/*class GridColumn implements IGridColumn {
     constructor(private mValue: string) {
     }
     get value() : string {
         return this.value;
     }
 }
-
-class GridRow implements IGridRow {
+*/
+/*class GridRow implements IGridRow {
     columns : Array<IGridColumn>;
     constructor(private mRowId : number) {
         this.columns = new Array<GridColumn>();
@@ -46,7 +50,7 @@ class GridRow implements IGridRow {
         return rv;
     }
 }
-
+*/
 
 export interface IGridModel {
     isRowsDefined() : boolean;
@@ -55,6 +59,7 @@ export interface IGridModel {
     getRowCount() : number;
     getColumnCount(): number;
     addRow(gridRow : IGridRow) :void;
+    removeRow(index: number) : void;
     getRow(rowIndex : number) : IGridRow;
     getHeaderColumn(colIndex: number) : IGridHeaderColumn;
     getFieldValueName() : string;
@@ -88,11 +93,15 @@ export class GridModel implements IGridModel {
             rv=this.gridData.headerColumns[colIndex];
         }
         return rv;
-    }
-    
+    }    
     addRow(gridRow : IGridRow) : void {
         if (gridRow) {
             this.gridData.rows.push(gridRow);
+        }
+    }
+    removeRow(index: number) {
+        if (index>=0 && index<this.gridData.rows.length) {
+            this.gridData.rows.splice(index,1);
         }
     }
     public getRow(rowIndex: number) : IGridRow {

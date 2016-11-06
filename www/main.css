@@ -182,11 +182,17 @@ th:hover {
     /*border-top-right-radius: 20px;*/
 }
 
+.pg2-header-cell:hover {
+    background: linear-gradient(to bottom, rgba(66,78,96,1) 0%,rgba(43,56,87,1) 100%);
+}
 .pg2-header-cell {
     position: relative;
     display: inline-block;
     border: 1px solid #B5C8CE;
-    background-color: #167F92;
+    /*background-color: #167F92;*/
+    /*background: linear-gradient(to bottom, #1e5799 0%,#2989d8 50%,#207cca 51%,#7db9e8 100%);*/
+    background: linear-gradient(to bottom, rgba(96,108,136,1) 0%,rgba(63,76,107,1) 100%);
+    
     color: #f1f1f1;
     /*color: #2DCABF;*/
     /*border-right: 1px dotted silver;
@@ -227,4 +233,28 @@ th:hover {
     line-height: 30px;
     white-space: nowrap;
     cursor: default; 
+}
+
+.barbox {
+    background: #2989d8;
+    display: inline-block;
+    height: 6px;
+    border-radius: 3px;
+}
+
+.columnSizeHandle:hover {
+    background: #dde1ea;
+}
+
+.columnSizeHandle {
+    display: block;
+    background: linear-gradient(to bottom, rgba(96,108,136,1) 0%,rgba(63,76,107,1) 100%);
+    /*background: #ebf0fb;*/
+    width: 5px;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    right: 1px;
+    cursor: col-resize;
+    border-radius: 3px;
 }
