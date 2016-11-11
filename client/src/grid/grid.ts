@@ -7,6 +7,13 @@ class DomRow {
 	}
 }
 
+class HeaderColumnResizeData {
+	public headerColumn: HTMLDivElement;
+	public startX: number;
+	public clientLeft: number;
+	public origWidth: number;
+}
+
 export class Grid {
 	modelOK: boolean=true;
 	headerHeight: number=0;
@@ -40,6 +47,8 @@ export class Grid {
 	pg2_viewport: HTMLDivElement;
 	pg2_canvas: HTMLDivElement;
 	
+	headerColumnResizeData : HeaderColumnResizeData=new HeaderColumnResizeData();
+
 	constructor(private width: number, private height: number, private mParentContainer: HTMLElement, private mGridModel: IGridModel) {
 		this.modelOK = this.checkModel();
 		console.log("Model Rows count: " + this.modelRowCount);
@@ -47,6 +56,8 @@ export class Grid {
 		console.log("Model Columns count: " + this.modelColumnsCount);
 		this.createBaseList();
 		this.createInitialDomRows();
+		document.documentElement.addEventListener("mouseup", $.proxy(this.onGlobalMouseUp, this));
+		document.documentElement.addEventListener("mousemove", $.proxy(this.onGlobalMouseMove, this));
 	}
 
 	public appendModelRow(rIGridRow: IGridRow) {
@@ -136,24 +147,28 @@ export class Grid {
 			this.pg2.appendChild(this.pg2_header);
 			this.pg2_header_row = <HTMLDivElement>document.createElement("div");
 			this.pg2_header_row.className="pg2-header-row";
+			//this.pg2_header_row.addEventListener("mousemove", $.proxy(this.onHandlerHeaderRowMouseMove, this, this.pg2_header_row));
+
 			//this.pg2_header_row = $("<div class='pg2-header-row'></div>");
 			this.pg2_header.appendChild(this.pg2_header_row);
 			var headerWidth=0;
 			for (var i = 0; i < this.modelColumnsCount; i++) {
-				var rr :HTMLDivElement =<HTMLDivElement>document.createElement("div");
-				rr.style.cssText='width: 100px;'
-				rr.className="pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "";
-				this.pg2_header_row.appendChild(rr);
+				var headerColumn :HTMLDivElement =<HTMLDivElement>document.createElement("div");
+				headerColumn.style.cssText='width: 100px;'
+				headerColumn.className="pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "";
+				this.pg2_header_row.appendChild(headerColumn);
 				if (i==0) {
-					headerWidth=rr.clientWidth;
+					headerWidth=headerColumn.clientWidth;
 				}
 				var span:HTMLSpanElement=document.createElement("span");
 				var textElement:Text=document.createTextNode(this.mGridModel.getHeaderColumn(i).name);
 				span.appendChild(textElement);
 				var handleElement: HTMLDivElement = document.createElement("div");
+				handleElement.addEventListener("mousedown", $.proxy(this.onHandlerElementMouseDown, this, handleElement, headerColumn));
+				
 				handleElement.className="columnSizeHandle";
-				rr.appendChild(span);
-				rr.appendChild(handleElement);				
+				headerColumn.appendChild(span);
+				headerColumn.appendChild(handleElement);				
 				//rr.innerHTML=""+this.mGridModel.getHeaderColumn(i).name;
 				//this.pg2_header_row.append("<div class='pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "' style='width: 100px;' onclick='onColumnHeaderClicked(this," + i + ",true)'>" + this.mGridModel.getHeaderColumn(i).name + "</div>");
 			}
@@ -188,8 +203,50 @@ export class Grid {
 		}
 	}
 	
+	onHandlerElementMouseDown(handleElement: HTMLDivElement, headerColumn : HTMLDivElement, ev: MouseEvent) {
+		this.headerColumnResizeData.headerColumn = headerColumn;
+		this.headerColumnResizeData.startX=ev.clientX;
+		this.headerColumnResizeData.clientLeft=this.headerColumnResizeData.startX-headerColumn.clientWidth;
+		this.headerColumnResizeData.origWidth=headerColumn.clientWidth;
+		console.log("on mouse down. X: "+ this.headerColumnResizeData.startX);
+	}
+
+	onGlobalMouseMove(ev: MouseEvent) {
+		if (this.headerColumnResizeData.headerColumn!=null) {
+			this.onColumnUpdateResize(ev);
+		}
+	}
+
+	onGlobalMouseUp(ev: MouseEvent) {
+		if (this.headerColumnResizeData.headerColumn!=null) {
+			this.onColumnResizeEnded(ev);
+			this.headerColumnResizeData.headerColumn = null;
+			this.headerColumnResizeData.startX=0;
+		}	
+	}
+
+	onColumnUpdateResize(ev: MouseEvent) {
+		console.log("on column resize update. X: "+ ev.clientX);
+		var diff=ev.clientX-this.headerColumnResizeData.startX;
+		var min=this.headerColumnResizeData.clientLeft+30;
+		console.log("client left: "+this.headerColumnResizeData.clientLeft);
+		if (ev.clientX>=min) {
+			this.headerColumnResizeData.headerColumn.style.width=(this.headerColumnResizeData.origWidth+diff)+"px";
+		}
+	}
+
+	onColumnResizeEnded(ev: MouseEvent) {
+		console.log("on column resize ended");
+	}
+
+	onHandlerHeaderRowMouseMove(headerRow: HTMLDivElement, ev: MouseEvent) {
+		if (this.headerColumnResizeData.headerColumn!=null) {
+			this.headerColumnResizeData.headerColumn.style.width=(this.headerColumnResizeData.headerColumn.clientWidth+1)+"px";
+		}
+	}
+
 	startRenderTimer() {
-		this.scrollVRenderTimer=setTimeout($.proxy(this.onScrollVRenderTimerTimedOut, this), 30);
+		this.scrollVRenderTimer=setTimeout($.proxy(this.onScrollVRenderTimerTimedOut, this), 50);
 		//this.renderTimer=setTimeout(this.onRenderTimerTimedOut, 100)
 	}
 
@@ -204,6 +261,7 @@ export class Grid {
 	}
 
 	onScrollVRenderTimerTimedOut() {
+		console.log("renderer called");
 		if (this.scrollDiffRows<this.currentDomRowsCount) {
 			// move single dom rows up/down
 			if (this.scrollTop>this.renderedScrollTop) {

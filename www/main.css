@@ -254,7 +254,7 @@ th:hover {
     height: 100%;
     position: absolute;
     top: 0px;
-    right: 1px;
+    right: -2px;
     cursor: col-resize;
     border-radius: 3px;
 }
