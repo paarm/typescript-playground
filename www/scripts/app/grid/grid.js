@@ -1,7 +1,7 @@
 System.register([], function(exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
-    var DomRow, Grid;
+    var DomRow, HeaderColumnResizeData, Grid;
     return {
         setters:[],
         execute: function() {
@@ -12,6 +12,11 @@ System.register([], function(exports_1, context_1) {
                     this.top = top;
                 }
                 return DomRow;
+            }());
+            HeaderColumnResizeData = (function () {
+                function HeaderColumnResizeData() {
+                }
+                return HeaderColumnResizeData;
             }());
             Grid = (function () {
                 function Grid(width, height, mParentContainer, mGridModel) {
@@ -40,12 +45,15 @@ System.register([], function(exports_1, context_1) {
                     this.pg2_canvasInitialChildsFragment = document.createDocumentFragment();
                     this.scrollVRenderTimer = -1;
                     this.scrollDiffRows = 0;
+                    this.headerColumnResizeData = new HeaderColumnResizeData();
                     this.modelOK = this.checkModel();
                     console.log("Model Rows count: " + this.modelRowCount);
                     this.modelColumnsCount = this.mGridModel.getColumnCount();
                     console.log("Model Columns count: " + this.modelColumnsCount);
                     this.createBaseList();
                     this.createInitialDomRows();
+                    document.documentElement.addEventListener("mouseup", $.proxy(this.onGlobalMouseUp, this));
+                    document.documentElement.addEventListener("mousemove", $.proxy(this.onGlobalMouseMove, this));
                 }
                 Object.defineProperty(Grid.prototype, "modelRowCount", {
                     get: function () {
@@ -143,20 +151,21 @@ System.register([], function(exports_1, context_1) {
                         this.pg2_header.appendChild(this.pg2_header_row);
                         var headerWidth = 0;
                         for (var i = 0; i < this.modelColumnsCount; i++) {
-                            var rr = document.createElement("div");
-                            rr.style.cssText = 'width: 100px;';
-                            rr.className = "pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "";
-                            this.pg2_header_row.appendChild(rr);
+                            var headerColumn = document.createElement("div");
+                            headerColumn.style.cssText = 'width: 100px;';
+                            headerColumn.className = "pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "";
+                            this.pg2_header_row.appendChild(headerColumn);
                             if (i == 0) {
-                                headerWidth = rr.clientWidth;
+                                headerWidth = headerColumn.clientWidth;
                             }
                             var span = document.createElement("span");
                             var textElement = document.createTextNode(this.mGridModel.getHeaderColumn(i).name);
                             span.appendChild(textElement);
                             var handleElement = document.createElement("div");
+                            handleElement.addEventListener("mousedown", $.proxy(this.onHandlerElementMouseDown, this, handleElement, headerColumn));
                             handleElement.className = "columnSizeHandle";
-                            rr.appendChild(span);
-                            rr.appendChild(handleElement);
+                            headerColumn.appendChild(span);
+                            headerColumn.appendChild(handleElement);
                         }
                         this.pg2_header_row.style.width = "" + headerWidth + "px;";
                         this.headerHeight = this.pg2_header_row.clientHeight;
@@ -178,8 +187,44 @@ System.register([], function(exports_1, context_1) {
                         });
                     }
                 };
+                Grid.prototype.onHandlerElementMouseDown = function (handleElement, headerColumn, ev) {
+                    this.headerColumnResizeData.headerColumn = headerColumn;
+                    this.headerColumnResizeData.startX = ev.clientX;
+                    this.headerColumnResizeData.clientLeft = this.headerColumnResizeData.startX - headerColumn.clientWidth;
+                    this.headerColumnResizeData.origWidth = headerColumn.clientWidth;
+                    console.log("on mouse down. X: " + this.headerColumnResizeData.startX);
+                };
+                Grid.prototype.onGlobalMouseMove = function (ev) {
+                    if (this.headerColumnResizeData.headerColumn != null) {
+                        this.onColumnUpdateResize(ev);
+                    }
+                };
+                Grid.prototype.onGlobalMouseUp = function (ev) {
+                    if (this.headerColumnResizeData.headerColumn != null) {
+                        this.onColumnResizeEnded(ev);
+                        this.headerColumnResizeData.headerColumn = null;
+                        this.headerColumnResizeData.startX = 0;
+                    }
+                };
+                Grid.prototype.onColumnUpdateResize = function (ev) {
+                    console.log("on column resize update. X: " + ev.clientX);
+                    var diff = ev.clientX - this.headerColumnResizeData.startX;
+                    var min = this.headerColumnResizeData.clientLeft + 30;
+                    console.log("client left: " + this.headerColumnResizeData.clientLeft);
+                    if (ev.clientX >= min) {
+                        this.headerColumnResizeData.headerColumn.style.width = (this.headerColumnResizeData.origWidth + diff) + "px";
+                    }
+                };
+                Grid.prototype.onColumnResizeEnded = function (ev) {
+                    console.log("on column resize ended");
+                };
+                Grid.prototype.onHandlerHeaderRowMouseMove = function (headerRow, ev) {
+                    if (this.headerColumnResizeData.headerColumn != null) {
+                        this.headerColumnResizeData.headerColumn.style.width = (this.headerColumnResizeData.headerColumn.clientWidth + 1) + "px";
+                    }
+                };
                 Grid.prototype.startRenderTimer = function () {
-                    this.scrollVRenderTimer = setTimeout($.proxy(this.onScrollVRenderTimerTimedOut, this), 30);
+                    this.scrollVRenderTimer = setTimeout($.proxy(this.onScrollVRenderTimerTimedOut, this), 50);
                 };
                 Grid.prototype.clearRenderTimer = function () {
                     var rv = false;
@@ -191,6 +236,7 @@ System.register([], function(exports_1, context_1) {
                     return rv;
                 };
                 Grid.prototype.onScrollVRenderTimerTimedOut = function () {
+                    console.log("renderer called");
                     if (this.scrollDiffRows < this.currentDomRowsCount) {
                         if (this.scrollTop > this.renderedScrollTop) {
                             while (true) {
@@ -464,4 +510,4 @@ System.register([], function(exports_1, context_1) {
         }
     }
 });
-//# sourceMappingURL=/home/pam/Programmierung/gitrepos/typescript-playground/scripts/app/grid/grid.js.map
+//# sourceMappingURL=c:/Users/pam/programmierung/typescript-playground/scripts/app/grid/grid.js.map
