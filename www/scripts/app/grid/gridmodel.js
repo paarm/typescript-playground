@@ -54,4 +54,4 @@ System.register([], function(exports_1, context_1) {
         }
     }
 });
-//# sourceMappingURL=/home/pam/Programmierung/gitrepos/typescript-playground/scripts/app/grid/gridmodel.js.map
+//# sourceMappingURL=c:/Users/pam/programmierung/typescript-playground/scripts/app/grid/gridmodel.js.map

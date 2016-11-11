@@ -179,4 +179,4 @@ System.register(['./grid/gridmodel', './grid/grid'], function(exports_1, context
         }
     }
 });
-//# sourceMappingURL=/home/pam/Programmierung/gitrepos/typescript-playground/scripts/app/test.js.map
+//# sourceMappingURL=c:/Users/pam/programmierung/typescript-playground/scripts/app/test.js.map
