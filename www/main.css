@@ -180,20 +180,25 @@ th:hover {
     overflow: hidden;
     background-color: #006071;
     /*border-top-right-radius: 20px;*/
+    user-select: none;
+    -ms-user-select: none;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Chrome/Safari/Opera */
+    -khtml-user-select: none; /* Konqueror */
+    -moz-user-select: none; /* Firefox */
 }
 
-.pg2-header-cell:hover {
+/*.pg2-header-cell:hover {
     background: linear-gradient(to bottom, rgba(66,78,96,1) 0%,rgba(43,56,87,1) 100%);
-}
+}*/
 .pg2-header-cell {
     position: relative;
     display: inline-block;
-    border: 1px solid #B5C8CE;
-    /*background-color: #167F92;*/
+    border: 1px solid #e6e6e6;
+    background-color: #fafafa;
     /*background: linear-gradient(to bottom, #1e5799 0%,#2989d8 50%,#207cca 51%,#7db9e8 100%);*/
-    background: linear-gradient(to bottom, rgba(96,108,136,1) 0%,rgba(63,76,107,1) 100%);
-    
-    color: #f1f1f1;
+    /*background: linear-gradient(to bottom, rgba(96,108,136,1) 0%,rgba(63,76,107,1) 100%);*/
+    color: #a8a8a8;
     /*color: #2DCABF;*/
     /*border-right: 1px dotted silver;
     border-bottom-color: silver;*/
@@ -208,15 +213,40 @@ th:hover {
     cursor: default; 
 }
 
+.pg2-header-toolbox {
+    height: 30px;
+    width: 30px;
+    position: absolute;
+    background: lightgreen;
+}
+
+/*.pg2-canvas {
+    background: url(
+    data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAABKSURBVChTY4ABH/6L/6FMOEAWY4TSYICueMtHfbg8nIHNRBCAKWYCETBFyCbA2DA5FA4uANYEU4RNMbIc2GqSAbKp2GygJmBgAACi1SVgsrZl4wAAAABJRU5ErkJggg==
+    ) repeat;
+}*/
+
 .pg2-row {
     position: absolute;
     white-space: nowrap;
     cursor: default;
     overflow: hidden;
-    background-color: #EAF2F3;
+    /*background-color: #EAF2F3;*/
+    background: rgba(0, 0, 0, 0) linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.05) 100%) repeat scroll 0 0;
+    color: #444;
+    user-select: none;
+    -ms-user-select: none;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Chrome/Safari/Opera */
+    -khtml-user-select: none; /* Konqueror */
+    -moz-user-select: none; /* Firefox */
 }
 .pg2-row-even {
     background-color: #FEFEFE;
+}
+
+.pg2-cell:hover {
+    border: 1px solid #555;
 }
 
 .pg2-cell {
@@ -244,17 +274,21 @@ th:hover {
 
 .columnSizeHandle:hover {
     background: #dde1ea;
+     /*background:url(
+        data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZSURBVBhXYyjIKfjPAAQwmglEIANCAgwMABl3BJ1lYn5tAAAAAElFTkSuQmCC
+     ) repeat;*/
 }
 
 .columnSizeHandle {
     display: block;
-    background: linear-gradient(to bottom, rgba(96,108,136,1) 0%,rgba(63,76,107,1) 100%);
+    /*background: linear-gradient(to bottom, rgba(96,108,136,1) 0%,rgba(63,76,107,1) 100%);*/
+    background: transparent;
     /*background: #ebf0fb;*/
-    width: 5px;
+    width: 15px;
     height: 100%;
     position: absolute;
     top: 0px;
     right: -2px;
     cursor: col-resize;
-    border-radius: 3px;
+    border-radius: 1px;
 }

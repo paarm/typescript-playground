@@ -31,7 +31,7 @@ $(document).ready(function() {
                 name: 'Papa',
                 renderer: function (grid: IGridModel, row: IGridRow, column: IGridColumn) {
                     var r:HTMLSpanElement = <HTMLSpanElement>document.createElement("span");
-                    r.style.cssText="width: "+column.value+"%; background: red;";
+                    r.style.cssText="width: "+column.value+"%; background: coral;";
                     r.className='barbox';
                     return r;
                     //return $("<span style='width: "+column.value+"%;' class='barbox'></span>")
@@ -115,10 +115,10 @@ $(document).ready(function() {
         });
     }
 
-    var myParentContainer = document.querySelector("body");
+    var myParentContainer =<HTMLElement> document.querySelector("#container");
     var myGrid = new Grid(1200, 700, myParentContainer, new GridModel(myGridData));
     var buttonAdd: HTMLButtonElement= <HTMLButtonElement>document.createElement("button");
-    buttonAdd.innerHTML="Add Row";
+    buttonAdd.innerHTML="Add 1K rows";
     buttonAdd.onclick=()=> {
         console.log("Button ADD clicked");
         var rows:IGridRow[]=[];
@@ -160,7 +160,7 @@ $(document).ready(function() {
     }
     myParentContainer.appendChild(buttonAdd);
     var buttonRemove: HTMLButtonElement= <HTMLButtonElement>document.createElement("button");
-    buttonRemove.innerHTML="Remove Row";
+    buttonRemove.innerHTML="Remove 1K rows";
     myParentContainer.appendChild(buttonRemove);
     buttonRemove.onclick=()=> {
         console.log("Button REMOVE clicked");
