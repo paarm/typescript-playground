@@ -285,6 +285,7 @@ export class Grid {
 		if (this.columnResizeContext.domColumn!=null) {
 			this.onColumnUpdateResize(ev.targetTouches[ev.targetTouches.length-1].clientX);
 			ev.preventDefault();
+			ev.stopPropagation();
 		}
 	}
 
