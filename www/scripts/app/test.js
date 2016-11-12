@@ -38,7 +38,7 @@ System.register(['./grid/gridmodel', './grid/grid'], function(exports_1, context
                             name: 'Papa',
                             renderer: function (grid, row, column) {
                                 var r = document.createElement("span");
-                                r.style.cssText = "width: " + column.value + "%; background: red;";
+                                r.style.cssText = "width: " + column.value + "%; background: coral;";
                                 r.className = 'barbox';
                                 return r;
                             }
@@ -120,10 +120,10 @@ System.register(['./grid/gridmodel', './grid/grid'], function(exports_1, context
                         ]
                     });
                 }
-                var myParentContainer = document.querySelector("body");
+                var myParentContainer = document.querySelector("#container");
                 var myGrid = new grid_1.Grid(1200, 700, myParentContainer, new gridmodel_1.GridModel(myGridData));
                 var buttonAdd = document.createElement("button");
-                buttonAdd.innerHTML = "Add Row";
+                buttonAdd.innerHTML = "Add 1K rows";
                 buttonAdd.onclick = function () {
                     console.log("Button ADD clicked");
                     var rows = [];
@@ -165,7 +165,7 @@ System.register(['./grid/gridmodel', './grid/grid'], function(exports_1, context
                 };
                 myParentContainer.appendChild(buttonAdd);
                 var buttonRemove = document.createElement("button");
-                buttonRemove.innerHTML = "Remove Row";
+                buttonRemove.innerHTML = "Remove 1K rows";
                 myParentContainer.appendChild(buttonRemove);
                 buttonRemove.onclick = function () {
                     console.log("Button REMOVE clicked");

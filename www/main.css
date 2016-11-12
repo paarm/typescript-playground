@@ -272,19 +272,51 @@ th:hover {
     border-radius: 3px;
 }
 
-.columnSizeHandle:hover {
+
+.pg2-columnResizeHandle-touch-active {
+    background: #dde1ea;
+    display: block;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    right: -2px;
+    /*cursor: col-resize;*/
+    border-radius: 1px;
+}
+
+.pg2-columnResizeHandle-notouch-active {
+    background: #dde1ea;
+    display: block;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    right: -2px;
+    cursor: col-resize;
+    border-radius: 1px;
+}
+
+.pg2-columnResizeHandle-notouch:hover {
     background: #dde1ea;
      /*background:url(
         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAZSURBVBhXYyjIKfjPAAQwmglEIANCAgwMABl3BJ1lYn5tAAAAAElFTkSuQmCC
      ) repeat;*/
 }
 
-.columnSizeHandle {
+.pg2-columnResizeHandle-touch {
     display: block;
-    /*background: linear-gradient(to bottom, rgba(96,108,136,1) 0%,rgba(63,76,107,1) 100%);*/
+    background: transparent;/* rgba(0, 0, 0, 0.02);*/
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    right: -2px;
+    cursor: col-resize;
+    border-radius: 1px;
+    text-align: right;
+}
+
+.pg2-columnResizeHandle-notouch {
+    display: block;
     background: transparent;
-    /*background: #ebf0fb;*/
-    width: 15px;
     height: 100%;
     position: absolute;
     top: 0px;

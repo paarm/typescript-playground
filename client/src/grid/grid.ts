@@ -10,6 +10,11 @@ class DomRow {
 class DomColumn {
 	public origWidth: number;
 	public newWidth: number;
+	public mouseMoveHandler: ()=>any;
+	public mouseUpHandler: ()=>any;
+	public touchMoveHandler: ()=>any;
+	public touchEndHandler: ()=>any;
+
 	constructor(public domColumnElement: HTMLDivElement, public domResizeHandleElement: HTMLDivElement, public displayIndex: number, public linkedModelColumnIndex: number) {
 	}
 }
@@ -22,6 +27,7 @@ class ColumnResizeContext {
 }
 
 export class Grid {
+	isTouchDevice: boolean=typeof window.ontouchstart !== 'undefined';
 	modelOK: boolean=true;
 	headerHeight: number=0;
 	viewportHeight: number=0;
@@ -39,6 +45,7 @@ export class Grid {
 	overflowRowBufferInPixel: number=0;
 	domRows: DomRow[]=[];
 	domColumns: DomColumn[]=[];
+	resizeHandleElementWidth: number=15;
 	headerColumnMinWidth: number=30;
 	scrollTop: number=0;
 	scrollLeft: number=0;
@@ -59,14 +66,19 @@ export class Grid {
 	columnResizeContext : ColumnResizeContext=new ColumnResizeContext();
 
 	constructor(private width: number, private height: number, private mParentContainer: HTMLElement, private mGridModel: IGridModel) {
+		if (this.isTouchDevice) {
+			this.resizeHandleElementWidth=50;
+			this.headerColumnMinWidth=65;
+		}
+		
 		this.modelOK = this.checkModel();
 		console.log("Model Rows count: " + this.modelRowCount);
 		this.modelColumnsCount = this.mGridModel.getColumnCount();
 		console.log("Model Columns count: " + this.modelColumnsCount);
 		this.createBaseList();
 		this.createInitialDomRows();
-		document.documentElement.addEventListener("mouseup", $.proxy(this.onGlobalMouseUp, this));
-		document.documentElement.addEventListener("mousemove", $.proxy(this.onGlobalMouseMove, this));
+		//document.documentElement.addEventListener("mouseup", $.proxy(this.onGlobalMouseUp, this));
+		//document.documentElement.addEventListener("mousemove", $.proxy(this.onGlobalMouseMove, this));
 	}
 
 	public appendModelRow(rIGridRow: IGridRow) {
@@ -176,12 +188,20 @@ export class Grid {
 				columnHeaderElement.appendChild(span);
 
 				var resizeHandleElement: HTMLDivElement = document.createElement("div");
-				resizeHandleElement.className="columnSizeHandle";
+				resizeHandleElement.style.width=this.resizeHandleElementWidth+"px";
 				columnHeaderElement.appendChild(resizeHandleElement);				
 				var domColumn: DomColumn = new DomColumn(columnHeaderElement, resizeHandleElement, i, i);
 				domColumn.origWidth=columnWidth;
 				this.domColumns.push(domColumn);
-				resizeHandleElement.addEventListener("mousedown", $.proxy(this.onColumnResizeMouseDown, this, domColumn));
+				if (this.isTouchDevice) {
+					resizeHandleElement.innerHTML=">";
+					resizeHandleElement.className="pg2-columnResizeHandle-touch";
+					resizeHandleElement.addEventListener("touchstart", $.proxy(this.onColumnResizeTouchStart, this, domColumn));
+				} else {
+					resizeHandleElement.className="pg2-columnResizeHandle-notouch";
+					resizeHandleElement.addEventListener("mousedown", $.proxy(this.onColumnResizeMouseDown, this, domColumn));
+				}
+				
 				//rr.innerHTML=""+this.mGridModel.getHeaderColumn(i).name;
 				//this.pg2_header_row.append("<div class='pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "' style='width: 100px;' onclick='onColumnHeaderClicked(this," + i + ",true)'>" + this.mGridModel.getHeaderColumn(i).name + "</div>");
 			}
@@ -215,8 +235,30 @@ export class Grid {
 			);
 		}
 	}
+
+	onColumnResizeTouchStart(domColumn: DomColumn, ev: TouchEvent) {
+		domColumn.touchMoveHandler=$.proxy(this.onColumnResizeTouchMove, this, domColumn);
+		domColumn.touchEndHandler=$.proxy(this.onColumnResizeTouchEnd, this, domColumn);
+
+		domColumn.domResizeHandleElement.className="pg2-columnResizeHandle-touch-active";
+		document.addEventListener("touchend", domColumn.touchEndHandler);
+		document.addEventListener("touchmove", domColumn.touchMoveHandler);
+
+		this.onColumnStartResize(domColumn, ev.targetTouches[ev.targetTouches.length-1].pageX);
+
+	}
 	
 	onColumnResizeMouseDown(domColumn: DomColumn, ev: MouseEvent) {
+		domColumn.mouseMoveHandler=$.proxy(this.onColumnResizeMouseMove, this, domColumn);
+		domColumn.mouseUpHandler=$.proxy(this.onColumnResizeMouseUp, this, domColumn);
+
+		domColumn.domResizeHandleElement.className="pg2-columnResizeHandle-notouch-active";
+		document.addEventListener("mouseup", domColumn.mouseUpHandler);
+		document.addEventListener("mousemove", domColumn.mouseMoveHandler);
+		this.onColumnStartResize(domColumn, ev.pageX);
+	}
+
+	onColumnStartResize(domColumn: DomColumn, pageX: number) {
 		/*var el: HTMLDivElement=document.createElement("div");
 		el.className="pg2-header-toolbox";
 		var posX=domColumn.domColumnElement.offsetLeft+domColumn.domColumnElement.clientWidth;
@@ -229,27 +271,48 @@ export class Grid {
 			this.domColumns[i].newWidth=this.domColumns[i].origWidth;
 		}
 		this.columnResizeContext.domColumn=domColumn;
-		this.columnResizeContext.initialPageX=ev.pageX;
+		this.columnResizeContext.initialPageX=pageX;
 		//this.columnResizeContext.clientLeft=this.columnResizeContext.startX-domColumn.domColumnElement.clientWidth;
-		console.log("on mouse down. X: "+ this.columnResizeContext.initialPageX);
+		console.log("on mouse down. X: "+ this.columnResizeContext.initialPageX);		
 	}
 
-	onGlobalMouseMove(ev: MouseEvent) {
+	onColumnResizeMouseMove(domColumn: DomColumn, ev: MouseEvent) {
 		if (this.columnResizeContext.domColumn!=null) {
-			this.onColumnUpdateResize(ev);
+			this.onColumnUpdateResize(ev.pageX);
+		}
+	}
+	onColumnResizeTouchMove(domColumn: DomColumn, ev: TouchEvent) {
+		if (this.columnResizeContext.domColumn!=null) {
+			this.onColumnUpdateResize(ev.targetTouches[ev.targetTouches.length-1].clientX);
+			ev.preventDefault();
 		}
 	}
 
-	onGlobalMouseUp(ev: MouseEvent) {
+	onColumnResizeMouseUp(domColumn: DomColumn, ev: MouseEvent) {
 		if (this.columnResizeContext.domColumn!=null) {
-			this.onColumnResizeEnded(ev);
+			domColumn.domResizeHandleElement.className="pg2-columnResizeHandle-notouch";
+
+			document.removeEventListener("mousemove",domColumn.mouseMoveHandler);
+			document.removeEventListener("mouseup", domColumn.mouseUpHandler);
+			this.onColumnResizeEnded();
 			this.columnResizeContext.domColumn = null;
-		}	
+		}
 	}
 
-	onColumnUpdateResize(ev: MouseEvent) {
-		console.log("on column resize update. X: "+ ev.pageX);
-		var moveDistance=ev.pageX-this.columnResizeContext.initialPageX;
+	onColumnResizeTouchEnd(domColumn: DomColumn, ev: TouchEvent) {
+		if (this.columnResizeContext.domColumn!=null) {
+			domColumn.domResizeHandleElement.className="pg2-columnResizeHandle-touch";
+
+			document.removeEventListener("touchmove",domColumn.touchMoveHandler);
+			document.removeEventListener("touchend", domColumn.touchEndHandler);
+			this.onColumnResizeEnded();
+			this.columnResizeContext.domColumn = null;
+		}
+	}
+
+	onColumnUpdateResize(pageX:number) {
+		console.log("on column resize update. X: "+ pageX);
+		var moveDistance=pageX-this.columnResizeContext.initialPageX;
 		var newWidth=Math.floor(this.columnResizeContext.domColumn.origWidth+moveDistance);
 		if (newWidth<this.headerColumnMinWidth) {
 			newWidth=this.headerColumnMinWidth;
@@ -261,7 +324,7 @@ export class Grid {
 		}
 	}
 
-	onColumnResizeEnded(ev: MouseEvent) {
+	onColumnResizeEnded() {
 		for (var i=0, count=this.domRows.length;i<count;i++) {
 			var col=<HTMLDivElement>this.domRows[i].domRowElement.children[this.columnResizeContext.domColumn.displayIndex];
 			col.style.width=this.columnResizeContext.domColumn.newWidth+"px";
