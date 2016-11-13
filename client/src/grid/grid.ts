@@ -60,6 +60,7 @@ export class Grid {
 	pg2: HTMLDivElement;
 	pg2_header: HTMLDivElement;
 	pg2_header_row: HTMLDivElement;
+	pg2_header_griprow: HTMLDivElement;
 	pg2_viewport: HTMLDivElement;
 	pg2_canvas: HTMLDivElement;
 	
@@ -67,6 +68,7 @@ export class Grid {
 
 	constructor(private width: number, private height: number, private mParentContainer: HTMLElement, private mGridModel: IGridModel) {
 		if (this.isTouchDevice) {
+			console.log("Touch device detected");
 			this.resizeHandleElementWidth=50;
 			this.headerColumnMinWidth=65;
 		}
@@ -166,12 +168,19 @@ export class Grid {
 			//this.pg2_header = $("<div class='pg2-header' style='overflow: hidden; position: relative;'></div>");
 			// header
 			this.pg2.appendChild(this.pg2_header);
+			//this.pg2_header_griprow = <HTMLDivElement>document.createElement("div");
+			//this.pg2_header_griprow.className="pg2-header-griprow";
+			//this.pg2_header.appendChild(this.pg2_header_griprow);
+
 			this.pg2_header_row = <HTMLDivElement>document.createElement("div");
 			this.pg2_header_row.className="pg2-header-row";
 			//this.pg2_header_row.addEventListener("mousemove", $.proxy(this.onHandlerHeaderRowMouseMove, this, this.pg2_header_row));
 
 			//this.pg2_header_row = $("<div class='pg2-header-row'></div>");
 			this.pg2_header.appendChild(this.pg2_header_row);
+			
+
+
 			//var headerWidth=0;
 			for (var i = 0; i < this.modelColumnsCount; i++) {
 				var columnWidth=100;
@@ -196,10 +205,12 @@ export class Grid {
 				if (this.isTouchDevice) {
 					resizeHandleElement.innerHTML=">";
 					resizeHandleElement.className="pg2-columnResizeHandle-touch";
-					resizeHandleElement.addEventListener("touchstart", $.proxy(this.onColumnResizeTouchStart, this, domColumn));
+					$(resizeHandleElement).bind("touchstart", $.proxy(this.onColumnResizeTouchStart, this, domColumn));
+					//resizeHandleElement.addEventListener("touchstart", $.proxy(this.onColumnResizeTouchStart, this, domColumn));
 				} else {
 					resizeHandleElement.className="pg2-columnResizeHandle-notouch";
-					resizeHandleElement.addEventListener("mousedown", $.proxy(this.onColumnResizeMouseDown, this, domColumn));
+					$(resizeHandleElement).bind("mousedown", $.proxy(this.onColumnResizeMouseDown, this, domColumn));
+					//resizeHandleElement.addEventListener("mousedown", $.proxy(this.onColumnResizeMouseDown, this, domColumn));
 				}
 				
 				//rr.innerHTML=""+this.mGridModel.getHeaderColumn(i).name;
@@ -208,11 +219,11 @@ export class Grid {
 			//this.pg2_header_row.style.width=""+headerWidth+"px;";
 			//this.pg2_header_row.css("width",this.pg2_header_row.children().first().outerWidth()*this.colsCount);
 			this.headerHeight=this.pg2_header_row.clientHeight;
-			//this.headerHeight=this.pg2_header_row.outerHeight();
+			//this.headerHeight=this.pg2_header_row.outerHeight(); -webkit-overflow-scrolling: touch;
 			this.viewportHeight=this.height-this.headerHeight;
 			// body
 			this.pg2_viewport=document.createElement("div");
-			this.pg2_viewport.style.cssText="width: 100%; overflow: auto; position: relative; height: "+this.viewportHeight+"px;";
+			this.pg2_viewport.style.cssText="width: 100%; overflow: auto; -webkit-overflow-scrolling: touch; position: relative; height: "+this.viewportHeight+"px;";
 			this.pg2_viewport.className="pg2-viewport";
 			//this.pg2_viewport = $("<div class='pg2-viewport' style='width: 100%; overflow: auto; position: relative; height: "+this.viewportHeight+"px;'></div>");
 			this.pg2.appendChild(this.pg2_viewport);
@@ -237,25 +248,49 @@ export class Grid {
 	}
 
 	onColumnResizeTouchStart(domColumn: DomColumn, ev: TouchEvent) {
-		domColumn.touchMoveHandler=$.proxy(this.onColumnResizeTouchMove, this, domColumn);
-		domColumn.touchEndHandler=$.proxy(this.onColumnResizeTouchEnd, this, domColumn);
-
 		domColumn.domResizeHandleElement.className="pg2-columnResizeHandle-touch-active";
-		document.addEventListener("touchend", domColumn.touchEndHandler);
-		document.addEventListener("touchmove", domColumn.touchMoveHandler);
+		$(domColumn.domResizeHandleElement).on("touchend.gp2", $.proxy(this.onColumnResizeTouchEnd, this, domColumn));
+		$(domColumn.domResizeHandleElement).on("touchmove.gp2", $.proxy(this.onColumnResizeTouchMove, this, domColumn));
+		//document.addEventListener("touchend", domColumn.touchEndHandler);
+		//document.addEventListener("touchmove", domColumn.touchMoveHandler);
 
 		this.onColumnStartResize(domColumn, ev.targetTouches[ev.targetTouches.length-1].pageX);
-
+		return false;
 	}
 	
 	onColumnResizeMouseDown(domColumn: DomColumn, ev: MouseEvent) {
-		domColumn.mouseMoveHandler=$.proxy(this.onColumnResizeMouseMove, this, domColumn);
-		domColumn.mouseUpHandler=$.proxy(this.onColumnResizeMouseUp, this, domColumn);
-
 		domColumn.domResizeHandleElement.className="pg2-columnResizeHandle-notouch-active";
-		document.addEventListener("mouseup", domColumn.mouseUpHandler);
-		document.addEventListener("mousemove", domColumn.mouseMoveHandler);
+		$(document).on("mouseup.pg2", $.proxy(this.onColumnResizeMouseUp, this, domColumn));
+		$(document).on("mousemove.pg2", $.proxy(this.onColumnResizeMouseMove, this, domColumn));
+		//document.addEventListener("mouseup", $.proxy(this.onColumnResizeMouseUp, this, domColumn));
+		//document.addEventListener("mousemove", $.proxy(this.onColumnResizeMouseMove, this, domColumn));
 		this.onColumnStartResize(domColumn, ev.pageX);
+		return false;
+	}
+
+	onColumnResizeMouseUp(domColumn: DomColumn, ev: MouseEvent) {
+		if (this.columnResizeContext.domColumn!=null) {
+			domColumn.domResizeHandleElement.className="pg2-columnResizeHandle-notouch";
+
+			$(document).unbind("mousemove.pg2");
+			$(document).unbind("mouseup.pg2");
+			//document.removeEventListener("mousemove",domColumn.mouseMoveHandler);
+			//document.removeEventListener("mouseup", domColumn.mouseUpHandler);
+			this.onColumnResizeEnded();
+			this.columnResizeContext.domColumn = null;
+		}
+	}
+
+	onColumnResizeTouchEnd(domColumn: DomColumn, ev: TouchEvent) {
+		if (this.columnResizeContext.domColumn!=null) {
+			domColumn.domResizeHandleElement.className="pg2-columnResizeHandle-touch";
+			$(domColumn.domResizeHandleElement).unbind("tochmove.gp2");
+			$(domColumn.domResizeHandleElement).unbind("touchend.gp2");
+			//document.removeEventListener("touchmove",domColumn.touchMoveHandler);
+			//document.removeEventListener("touchend", domColumn.touchEndHandler);
+			this.onColumnResizeEnded();
+			this.columnResizeContext.domColumn = null;
+		}
 	}
 
 	onColumnStartResize(domColumn: DomColumn, pageX: number) {
@@ -280,36 +315,25 @@ export class Grid {
 		if (this.columnResizeContext.domColumn!=null) {
 			this.onColumnUpdateResize(ev.pageX);
 		}
+		return false;
 	}
 	onColumnResizeTouchMove(domColumn: DomColumn, ev: TouchEvent) {
 		if (this.columnResizeContext.domColumn!=null) {
-			this.onColumnUpdateResize(ev.targetTouches[ev.targetTouches.length-1].clientX);
-			ev.preventDefault();
-			ev.stopPropagation();
+			//this.onColumnUpdateResize(ev.targetTouches[ev.targetTouches.length-1].clientX);
+			this.onColumnUpdateResize(ev.changedTouches.item(ev.changedTouches.length-1).pageX);
+			//ev.preventDefault();
+			//ev.stopPropagation();
+			//ev.stopPropagation();
+			//ev.returnValue=false;
+			//ev = $.event.fix(ev);
+			//event.preventDefault ? event.preventDefault() : (event.returnValue = false);
+			//ev.preventDefault();
+			//ev.returnValue=false;
+			//ev.stopPropagation();
 		}
+		return false;
 	}
 
-	onColumnResizeMouseUp(domColumn: DomColumn, ev: MouseEvent) {
-		if (this.columnResizeContext.domColumn!=null) {
-			domColumn.domResizeHandleElement.className="pg2-columnResizeHandle-notouch";
-
-			document.removeEventListener("mousemove",domColumn.mouseMoveHandler);
-			document.removeEventListener("mouseup", domColumn.mouseUpHandler);
-			this.onColumnResizeEnded();
-			this.columnResizeContext.domColumn = null;
-		}
-	}
-
-	onColumnResizeTouchEnd(domColumn: DomColumn, ev: TouchEvent) {
-		if (this.columnResizeContext.domColumn!=null) {
-			domColumn.domResizeHandleElement.className="pg2-columnResizeHandle-touch";
-
-			document.removeEventListener("touchmove",domColumn.touchMoveHandler);
-			document.removeEventListener("touchend", domColumn.touchEndHandler);
-			this.onColumnResizeEnded();
-			this.columnResizeContext.domColumn = null;
-		}
-	}
 
 	onColumnUpdateResize(pageX:number) {
 		console.log("on column resize update. X: "+ pageX);
