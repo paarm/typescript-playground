@@ -59,6 +59,7 @@ export class Grid {
 
 	pg2: HTMLDivElement;
 	pg2_header: HTMLDivElement;
+	pg2_header_resize_handle_row: HTMLDivElement;
 	pg2_header_row: HTMLDivElement;
 	pg2_header_griprow: HTMLDivElement;
 	pg2_viewport: HTMLDivElement;
@@ -156,28 +157,34 @@ export class Grid {
 		if (this.modelOK) {
 			console.log("Header Columns count: " + this.modelColumnsCount);
 			var lines: number = this.mGridModel.getRowCount();
-
+			// the grid container
 			this.pg2 = <HTMLDivElement>document.createElement("div");
-			this.pg2.style.cssText="width: "+this.width+"px; height: "+this.height+"px; overflow: hidden; position: relative";
+			this.pg2.style.cssText="width: "+this.width+"px; height: "+this.height+"px; ";
 			this.pg2.className="pg2";
-			//$("<div class='pg2' style='width: "+this.width+"px; height: "+this.height+"px; overflow: hidden; position: relative'></div>");
 			this.mParentContainer.appendChild(this.pg2);
+			// header container
 			this.pg2_header = <HTMLDivElement>document.createElement("div");
-			this.pg2_header.style.cssText='overflow: hidden; position: relative;';
 			this.pg2_header.className="pg2-header";
+			this.pg2.appendChild(this.pg2_header);
+			// resize handler row
+			this.pg2_header_resize_handle_row = <HTMLDivElement>document.createElement("div");
+			this.pg2_header_resize_handle_row.style.cssText="width: "+this.width+"px; height: 5px;";
+			this.pg2_header_resize_handle_row.className="pg2-header-resize-handle-row";
+			this.pg2_header.appendChild(this.pg2_header_resize_handle_row);
+			// row in the header
+			this.pg2_header_row = <HTMLDivElement>document.createElement("div");
+			this.pg2_header_row.className="pg2-header-row";
+			this.pg2_header.appendChild(this.pg2_header_row);
+			
 			//this.pg2_header = $("<div class='pg2-header' style='overflow: hidden; position: relative;'></div>");
 			// header
-			this.pg2.appendChild(this.pg2_header);
 			//this.pg2_header_griprow = <HTMLDivElement>document.createElement("div");
 			//this.pg2_header_griprow.className="pg2-header-griprow";
 			//this.pg2_header.appendChild(this.pg2_header_griprow);
 
-			this.pg2_header_row = <HTMLDivElement>document.createElement("div");
-			this.pg2_header_row.className="pg2-header-row";
 			//this.pg2_header_row.addEventListener("mousemove", $.proxy(this.onHandlerHeaderRowMouseMove, this, this.pg2_header_row));
 
 			//this.pg2_header_row = $("<div class='pg2-header-row'></div>");
-			this.pg2_header.appendChild(this.pg2_header_row);
 			
 
 
@@ -218,13 +225,14 @@ export class Grid {
 			}
 			//this.pg2_header_row.style.width=""+headerWidth+"px;";
 			//this.pg2_header_row.css("width",this.pg2_header_row.children().first().outerWidth()*this.colsCount);
-			this.headerHeight=this.pg2_header_row.clientHeight;
+			this.headerHeight=this.pg2_header.clientHeight;
 			//this.headerHeight=this.pg2_header_row.outerHeight(); -webkit-overflow-scrolling: touch;
 			this.viewportHeight=this.height-this.headerHeight;
 			// body
 			this.pg2_viewport=document.createElement("div");
-			this.pg2_viewport.style.cssText="width: 100%; overflow: auto; -webkit-overflow-scrolling: touch; position: relative; height: "+this.viewportHeight+"px;";
+			this.pg2_viewport.style.cssText="height: "+this.viewportHeight+"px;";
 			this.pg2_viewport.className="pg2-viewport";
+
 			//this.pg2_viewport = $("<div class='pg2-viewport' style='width: 100%; overflow: auto; position: relative; height: "+this.viewportHeight+"px;'></div>");
 			this.pg2.appendChild(this.pg2_viewport);
 			this.pg2_canvas = document.createElement("div");
@@ -294,13 +302,6 @@ export class Grid {
 	}
 
 	onColumnStartResize(domColumn: DomColumn, pageX: number) {
-		/*var el: HTMLDivElement=document.createElement("div");
-		el.className="pg2-header-toolbox";
-		var posX=domColumn.domColumnElement.offsetLeft+domColumn.domColumnElement.clientWidth;
-		el.style.setProperty("left", posX+"px");
-		el.style.setProperty("top", this.pg2_header_row.offsetTop+this.pg2_header_row.clientHeight+"px");
-		this.pg2.appendChild(el);
-		*/
 		for (var i=0, count=this.domColumns.length;i<count;i++) {
 			this.domColumns[i].origWidth=Math.floor($(this.domColumns[i].domColumnElement).width());
 			this.domColumns[i].newWidth=this.domColumns[i].origWidth;
