@@ -203,6 +203,16 @@ export class Grid {
 				span.appendChild(textElement);
 				columnHeaderElement.appendChild(span);
 
+/*
+				var test: HTMLDivElement = document.createElement("div");
+				test.className="pg2-resize-handle";
+				test.style.top="0px";
+				test.style.left=(columnHeaderElement.offsetLeft+columnHeaderElement.offsetWidth)+"px";
+				this.pg2_header_resize_handle_row.appendChild(test);
+
+
+*/
+
 				var resizeHandleElement: HTMLDivElement = document.createElement("div");
 				resizeHandleElement.style.width=this.resizeHandleElementWidth+"px";
 				columnHeaderElement.appendChild(resizeHandleElement);				
@@ -381,6 +391,11 @@ export class Grid {
 	}
 
 	onScrollVRenderTimerTimedOut() {
+		this.render();
+	}
+
+	render() {
+		this.clearRenderTimer();
 		console.log("renderer called");
 		if (this.scrollDiffRows<this.currentDomRowsCount) {
 			// move single dom rows up/down
@@ -494,7 +509,11 @@ export class Grid {
 			if (this.scrollTop>(this.canvasHeightInPixel-this.height)) {
 				this.scrollTop=(this.canvasHeightInPixel-this.height);
 			}
-			this.startRenderTimer();
+			if (!timerStopped && this.scrollDiffRows<this.maxVisibleDomRows) {
+				this.render();
+			} else {
+				this.startRenderTimer();
+			}
 		}
 	}
 

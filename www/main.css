@@ -61,27 +61,20 @@ th:hover {
 }
 
 .pg2-header-resize-handle-row {
-    overflow: hidden;
+    position: relative;
+    overflow: visible;
     background-color: #114071;
 }
 
-.pg2-header-griprow {
-    position: relative;
-    top: -5px;
-    height: 30px;
-    white-space: nowrap;
-    cursor: default;
-    overflow: hidden;
-    background-color: #006071;
-    /*border-top-right-radius: 20px;*/
-    user-select: none;
-    -ms-user-select: none;
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Chrome/Safari/Opera */
-    -khtml-user-select: none; /* Konqueror */
-    -moz-user-select: none; /* Firefox */
+.pg2-resize-handle {
+    position: absolute;
+    background-image: url(../icons/leftright.png);
+    background-size: 16px 16px;
+    width: 16px;
+    height: 16px;
+    z-index: 1;
+    overflow: visible;
 }
-
 
 /*.pg2-header-cell:hover {
     background: linear-gradient(to bottom, rgba(66,78,96,1) 0%,rgba(43,56,87,1) 100%);

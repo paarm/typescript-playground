@@ -25,7 +25,7 @@ System.register(['./grid/gridmodel', './grid/grid'], function(exports_1, context
                         },
                         {
                             id: '1',
-                            name: 'Mama',
+                            name: 'Total',
                             renderer: function (grid, row, column) {
                                 var r = document.createElement("span");
                                 r.style.cssText = "width: " + column.value + "%;";
@@ -35,7 +35,7 @@ System.register(['./grid/gridmodel', './grid/grid'], function(exports_1, context
                         },
                         {
                             id: '1',
-                            name: 'Papa',
+                            name: 'R2D2',
                             renderer: function (grid, row, column) {
                                 var r = document.createElement("span");
                                 r.style.cssText = "width: " + column.value + "%; background: coral;";
@@ -45,43 +45,43 @@ System.register(['./grid/gridmodel', './grid/grid'], function(exports_1, context
                         },
                         {
                             id: '1',
-                            name: 'Lena'
+                            name: '01/2016'
                         },
                         {
                             id: '1',
-                            name: 'Katharina'
+                            name: '02/2016'
                         },
                         {
                             id: '1',
-                            name: 'Jakob'
+                            name: '03/2016'
                         },
                         {
                             id: '1',
-                            name: 'Melli'
+                            name: '04/2016'
                         },
                         {
                             id: '1',
-                            name: 'Oma'
+                            name: '05/2016'
                         },
                         {
                             id: '1',
-                            name: 'Opa'
+                            name: '06/2016'
                         },
                         {
                             id: '1',
-                            name: 'Sophia'
+                            name: '07/2016'
                         },
                         {
                             id: '1',
-                            name: 'Anika'
+                            name: '08/2016'
                         },
                         {
                             id: '1',
-                            name: 'Mia'
+                            name: '09/2016'
                         },
                         {
                             id: '1',
-                            name: 'Gerhard'
+                            name: '10/2016'
                         }
                     ],
                     rows: []
