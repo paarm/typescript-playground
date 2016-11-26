@@ -89,9 +89,9 @@ export class GridModel implements IGridModel {
     }
     getHeaderColumn(colIndex: number) : IGridHeaderColumn {
         var rv : IGridHeaderColumn=null;
-        if (colIndex>=0 && colIndex<this.getColumnCount()) {
+        //if (colIndex>=0 && colIndex<this.getColumnCount()) {
             rv=this.gridData.headerColumns[colIndex];
-        }
+        //}
         return rv;
     }    
     addRow(gridRow : IGridRow) : void {
