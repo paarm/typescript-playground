@@ -50,7 +50,7 @@ th:hover {
     /*position: relative;*/
     white-space: nowrap;
     cursor: default;
-    background-color: #006071;
+    background-color: #b5b2b2;
     /*border-top-right-radius: 20px;*/
     user-select: none;
     -ms-user-select: none;
@@ -63,7 +63,7 @@ th:hover {
 .pg2-header-resize-handle-row {
     position: relative;
     overflow: visible;
-    background-color: #114071;
+    background-color: #dadada;
 }
 
 .pg2-resize-handle {

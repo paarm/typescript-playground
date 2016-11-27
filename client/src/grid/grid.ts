@@ -4,10 +4,6 @@ import {RowCacheHandler, RowRange, RowCacheElement} from './rowcache';
 class DomColumn {
 	public origWidth: number;
 	public newWidth: number;
-	public mouseMoveHandler: ()=>any;
-	public mouseUpHandler: ()=>any;
-	public touchMoveHandler: ()=>any;
-	public touchEndHandler: ()=>any;
 
 	constructor(public domColumnElement: HTMLDivElement, public domResizeHandleElement: HTMLDivElement, public displayIndex: number, public linkedModelColumnIndex: number) {
 	}
@@ -20,39 +16,44 @@ class ColumnResizeContext {
 	//public origWidth: number;
 }
 
+class CanvasProperties {
+	canvasHeightForRowsInPixel: number=0;
+	viewportHightForRowsInPixel: number=0;
+	rowHeightInPixel: number=0;
+	maxRowCount: number=0;
+	maxVisibleRowCount: number=0;
+	overflowRowCount: number=0;
+
+	scrollTop: number=0;
+	scrollLeft: number=0;
+	renderedScrollTop: number=0;
+	renderedScrollLeft: number=0;
+	scrollVRenderTimer: number=-1;
+	scrollDiffRows:number=0;
+
+	headerHeight: number=0;
+	renderedRowRange: RowRange=new RowRange(-1,-1);
+	nextRowRange: RowRange=new RowRange(-1,-1);
+
+}
+
 export class Grid {
 	isTouchDevice: boolean=typeof window.ontouchstart !== 'undefined';
 	modelOK: boolean=true;
-	headerHeight: number=0;
-	viewportHeight: number=0;
-	rowHeightInPixel: number=0;
 	//modelRowCount: number;
 	get modelRowCount() : number {
 		return this.mGridModel.getRowCount();
 	}
 	rowCacheHandler: RowCacheHandler=new RowCacheHandler();
-	rowRange: RowRange=new RowRange(-1,-1);
+	canvasProperties: CanvasProperties=new CanvasProperties();
 
 
 	modelColumnsCount: number=0;
-	canvasHeightInPixel: number=0;
-	maxDomRowsCount: number=0;
-	maxVisibleDomRows: number=0;
-	overflowRowBufferCount: number=0;
-	overflowRowBufferInPixel: number=0;
 	//domRows: DomRow[]=[];
 	domColumns: DomColumn[]=[];
 	resizeHandleElementWidth: number=15;
 	headerColumnMinWidth: number=30;
-	scrollTop: number=0;
-	scrollLeft: number=0;
-	renderedScrollTop: number=0;
-	renderedScrollLeft: number=0;
-	topDomRowIndex: number=0;
-	bottomDomRowIndex: number=0;
-	pg2_canvasInitialChildsFragment:DocumentFragment=document.createDocumentFragment();
-	scrollVRenderTimer: number=-1;
-	scrollDiffRows:number=0;
+	pg2_canvasFragment:DocumentFragment=document.createDocumentFragment();
 
 	pg2: HTMLDivElement;
 	pg2_header: HTMLDivElement;
@@ -163,7 +164,8 @@ export class Grid {
 			this.pg2.appendChild(this.pg2_header);
 			// resize handler row
 			this.pg2_header_resize_handle_row = <HTMLDivElement>document.createElement("div");
-			this.pg2_header_resize_handle_row.style.cssText="width: "+this.width+"px; height: 5px;";
+			//this.pg2_header_resize_handle_row.style.cssText="width: "+this.width+"px; height: 5px;";
+			this.pg2_header_resize_handle_row.style.cssText="height: 5px;";
 			this.pg2_header_resize_handle_row.className="pg2-header-resize-handle-row";
 			this.pg2_header.appendChild(this.pg2_header_resize_handle_row);
 			// row in the header
@@ -196,16 +198,16 @@ export class Grid {
 					$(resizeHandleElement).bind("mousedown", $.proxy(this.onColumnResizeMouseDown, this, domColumn));
 				}
 			}
-			this.headerHeight=this.pg2_header.clientHeight;
-			this.viewportHeight=this.height-this.headerHeight;
+			this.canvasProperties.headerHeight=this.pg2_header.clientHeight;
+			this.canvasProperties.viewportHightForRowsInPixel=this.height-this.canvasProperties.headerHeight;
 			// body
 			this.pg2_viewport=document.createElement("div");
-			this.pg2_viewport.style.cssText="height: "+this.viewportHeight+"px;";
+			this.pg2_viewport.style.cssText="height: "+this.canvasProperties.viewportHightForRowsInPixel+"px;";
 			this.pg2_viewport.className="pg2-viewport";
 
 			this.pg2.appendChild(this.pg2_viewport);
 			this.pg2_canvas = document.createElement("div");
-			this.pg2_canvas.style.cssText="width: " + (this.modelColumnsCount * 103.6) + "px; height: 30px;";
+			//this.pg2_canvas.style.cssText="width: " + (this.modelColumnsCount * 103.6) + "px; height: 30px;";
 			this.pg2_canvas.className="pg2-canvas";
 			this.pg2_viewport.appendChild(this.pg2_canvas);
 			this.measureRow();
@@ -313,14 +315,14 @@ export class Grid {
 	}
 
 	startRenderTimer() {
-		this.scrollVRenderTimer=setTimeout($.proxy(this.onScrollVRenderTimerTimedOut, this), 50);
+		this.canvasProperties.scrollVRenderTimer=setTimeout($.proxy(this.onScrollVRenderTimerTimedOut, this), 50);
 	}
 
 	clearRenderTimer() : boolean {
 		var rv: boolean=false;
-		if (this.scrollVRenderTimer!=-1) {
-			clearTimeout(this.scrollVRenderTimer);
-			this.scrollVRenderTimer=-1;
+		if (this.canvasProperties.scrollVRenderTimer!=-1) {
+			clearTimeout(this.canvasProperties.scrollVRenderTimer);
+			this.canvasProperties.scrollVRenderTimer=-1;
 			rv=true;
 		}
 		return rv;
@@ -332,18 +334,18 @@ export class Grid {
 
 	render() {
 		this.clearRenderTimer();
-		console.log("renderer called with scroll top: "+this.scrollTop);
+		console.log("renderer called with scroll top: "+this.canvasProperties.scrollTop);
 
 		if (this.modelRowCount>0) {
-			this.rowRange.from=this.calculateModelRowIndexForFirstDomRow(this.scrollTop);
-			var rangeToIndex=Math.min(this.modelRowCount-1,this.rowRange.from+this.maxDomRowsCount-1);
-			this.rowRange.to=Math.max(this.rowRange.from,rangeToIndex);
-			this.rowCacheHandler.deleteOutsideRowCacheElements(this.pg2_canvas, this.rowRange);
-			var addedRowCacheElements:RowCacheElement[]=this.rowCacheHandler.addNotExistingRowCacheElements(this.rowRange);
+			this.canvasProperties.nextRowRange.from=this.calculateModelRowIndexForFirstDomRow(this.canvasProperties.scrollTop);
+			var rangeToIndex=Math.min(this.modelRowCount-1,this.canvasProperties.nextRowRange.from+this.canvasProperties.maxRowCount-1);
+			this.canvasProperties.nextRowRange.to=Math.max(this.canvasProperties.nextRowRange.from,rangeToIndex);
+			this.rowCacheHandler.deleteOutsideRowCacheElements(this.pg2_canvas, this.canvasProperties.nextRowRange);
+			var addedRowCacheElements:RowCacheElement[]=this.rowCacheHandler.addNotExistingRowCacheElements(this.canvasProperties.nextRowRange);
 		} else {
-			this.rowRange.from=-1;
-			this.rowRange.to=-1;
-			this.rowCacheHandler.deleteOutsideRowCacheElements(this.pg2_canvas, this.rowRange);
+			this.canvasProperties.nextRowRange.from=-1;
+			this.canvasProperties.nextRowRange.to=-1;
+			this.rowCacheHandler.deleteOutsideRowCacheElements(this.pg2_canvas, this.canvasProperties.nextRowRange);
 		}
 		if (addedRowCacheElements!=null && addedRowCacheElements.length>0) {
 			for (var i=0, count=addedRowCacheElements.length;i<count;i++) {
@@ -351,18 +353,20 @@ export class Grid {
 				var row:HTMLDivElement=this.buildHTMLRow(addedRowCacheElements[i].globalRowIndex);
 				addedRowCacheElements[i].htmlElement=row;
 				this.updateInnerCellContent(addedRowCacheElements[i]);
-				this.pg2_canvasInitialChildsFragment.appendChild(row);
+				this.pg2_canvasFragment.appendChild(row);
 			}
-			this.pg2_canvas.appendChild(this.pg2_canvasInitialChildsFragment);
+			this.pg2_canvas.appendChild(this.pg2_canvasFragment);
 		}
-		this.renderedScrollTop=this.scrollTop;
+		this.canvasProperties.renderedScrollTop=this.canvasProperties.scrollTop;
+		this.canvasProperties.renderedRowRange.from=this.canvasProperties.nextRowRange.from;
+		this.canvasProperties.renderedRowRange.to=this.canvasProperties.nextRowRange.to;
 	}
 
 	buildHTMLRow(domRowIndex: number): HTMLDivElement {
 		var evenodd:string=(domRowIndex%2==0)?"even":"odd";
 		var row: HTMLDivElement = <HTMLDivElement> document.createElement("div");
 		row.className="pg2-row pg2-row-" + domRowIndex + " pg2-row-"+evenodd;
-		row.style.cssText="top: " + (this.rowHeightInPixel * domRowIndex) + "px;";
+		row.style.cssText="top: " + (this.canvasProperties.rowHeightInPixel * domRowIndex) + "px;";
 		//var row: JQuery = $("<div class='pg2-row pg2-row-" + domRowIndex + " pg2-row-"+evenodd+"' style='top: " + (this.rowHeight * domRowIndex) + "px;'></div>");
 		this.buildHTMLColumns(row,domRowIndex);
 		return row;
@@ -402,9 +406,9 @@ export class Grid {
 	}
 
 	calculateModelRowIndexForFirstDomRow(scrollTopExplizit: number) : number {
-		var firstModelRowIndex: number=Math.floor(scrollTopExplizit/this.rowHeightInPixel);
+		var firstModelRowIndex: number=Math.floor(scrollTopExplizit/this.canvasProperties.rowHeightInPixel);
 		console.log("First visible model row index is: "+firstModelRowIndex);
-		firstModelRowIndex-=this.overflowRowBufferCount;
+		firstModelRowIndex-=this.canvasProperties.overflowRowCount;
 		if (firstModelRowIndex+this.rowCacheHandler.getRowCacheElementCount()>this.modelRowCount) {
 			firstModelRowIndex=this.modelRowCount-this.rowCacheHandler.getRowCacheElementCount();
 		}
@@ -416,28 +420,28 @@ export class Grid {
 	}
 
 	onScrollH(currentScrollLeft: number) {
-		if (this.scrollLeft!=currentScrollLeft) {
-			this.scrollLeft=currentScrollLeft;
+		if (this.canvasProperties.scrollLeft!=currentScrollLeft) {
+			this.canvasProperties.scrollLeft=currentScrollLeft;
 			var count=this.pg2_header_row.childElementCount;
 			for (var i=0;i<count;i++) {
 				var child:HTMLDivElement=<HTMLDivElement>this.pg2_header_row.children[i];
-				child.style.left=""+(-this.scrollLeft)+"px";
+				child.style.left=""+(-this.canvasProperties.scrollLeft)+"px";
 			}
 		}
 	}
 
 	onScrollV(currentScrollTop: number) {
 		var timerStopped: boolean=false;
-		if (currentScrollTop!=this.scrollTop) {
+		if (currentScrollTop!=this.canvasProperties.scrollTop) {
 			timerStopped=this.clearRenderTimer();
 		}
-		this.scrollDiffRows=Math.abs(currentScrollTop-this.renderedScrollTop)/this.rowHeightInPixel;
-		if (timerStopped || (this.scrollDiffRows>0 && this.scrollDiffRows>this.overflowRowBufferCount)) {
-			this.scrollTop=currentScrollTop;
-			if (this.scrollTop>(this.canvasHeightInPixel-this.height)) {
-				this.scrollTop=(this.canvasHeightInPixel-this.height);
+		this.canvasProperties.scrollDiffRows=Math.abs(currentScrollTop-this.canvasProperties.renderedScrollTop)/this.canvasProperties.rowHeightInPixel;
+		if (timerStopped || (this.canvasProperties.scrollDiffRows>0 && this.canvasProperties.scrollDiffRows>this.canvasProperties.overflowRowCount)) {
+			this.canvasProperties.scrollTop=currentScrollTop;
+			if (this.canvasProperties.scrollTop>(this.canvasProperties.canvasHeightForRowsInPixel-this.height)) {
+				this.canvasProperties.scrollTop=(this.canvasProperties.canvasHeightForRowsInPixel-this.height);
 			}
-			if (!timerStopped && this.scrollDiffRows<this.maxVisibleDomRows) {
+			if (!timerStopped && this.canvasProperties.scrollDiffRows<this.canvasProperties.maxVisibleRowCount) {
 				this.render();
 			} else {
 				this.startRenderTimer();
@@ -453,30 +457,29 @@ export class Grid {
 	measureRow() {
 		var dummyRow : HTMLDivElement=this.buildHTMLRow(0);
 		this.pg2_canvas.appendChild(dummyRow);
-		this.rowHeightInPixel=dummyRow.clientHeight;//.outerHeight(true);
-		console.log("Row height: "+this.rowHeightInPixel+"px");
+		this.canvasProperties.rowHeightInPixel=dummyRow.clientHeight;//.outerHeight(true);
+		console.log("Row height: "+this.canvasProperties.rowHeightInPixel+"px");
 		this.pg2_canvas.removeChild(dummyRow);//.children().first().remove();
 	}
 
 	measureCanvasHeight() {
-		this.canvasHeightInPixel=this.rowHeightInPixel*this.modelRowCount;
-		this.pg2_canvas.style.height=""+this.canvasHeightInPixel+"px";
-		console.log("Canvas Height: "+this.canvasHeightInPixel);
+		this.canvasProperties.canvasHeightForRowsInPixel=this.canvasProperties.rowHeightInPixel*this.modelRowCount;
+		this.pg2_canvas.style.height=""+this.canvasProperties.canvasHeightForRowsInPixel+"px";
+		console.log("Canvas Height: "+this.canvasProperties.canvasHeightForRowsInPixel);
 	}
 
 	measureVisibleRows() {
-		this.maxVisibleDomRows=this.viewportHeight/this.rowHeightInPixel;
-		this.maxVisibleDomRows=Math.ceil(this.maxVisibleDomRows);
-		console.log("Max visible Dom rows: "+this.maxVisibleDomRows);
+		this.canvasProperties.maxVisibleRowCount=this.canvasProperties.viewportHightForRowsInPixel/this.canvasProperties.rowHeightInPixel;
+		this.canvasProperties.maxVisibleRowCount=Math.ceil(this.canvasProperties.maxVisibleRowCount);
+		console.log("Max visible Dom rows: "+this.canvasProperties.maxVisibleRowCount);
 	}
 
 	measureMaxDomRows() {
-		this.maxDomRowsCount=this.maxVisibleDomRows*2;
-		this.overflowRowBufferCount=Math.max(1, Math.floor((this.maxDomRowsCount-this.maxVisibleDomRows)/2));
-		this.overflowRowBufferInPixel=this.overflowRowBufferCount*this.rowHeightInPixel;
+		this.canvasProperties.maxRowCount=this.canvasProperties.maxVisibleRowCount*2;
+		this.canvasProperties.overflowRowCount=Math.max(1, Math.floor((this.canvasProperties.maxRowCount-this.canvasProperties.maxVisibleRowCount)/2));
 
-		console.log("Max Dom rows count: "+this.maxDomRowsCount);
-		console.log("Overflow row buffer count: "+this.overflowRowBufferCount);
+		console.log("Max Dom rows count: "+this.canvasProperties.maxRowCount);
+		console.log("Overflow row buffer count: "+this.canvasProperties.overflowRowCount);
 	}
 
 	onNewModelRowAddedLater() {

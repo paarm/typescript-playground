@@ -1,5 +1,4 @@
 export class RowRange {
-	private marker: boolean;
 	constructor(public from: number, public to: number) {}
 }
 
@@ -27,6 +26,7 @@ export class RowCacheHandler {
 		}
 		return null;
 	}
+	
 	public addRowCacheEntry(globalRowIndex: number) : RowCacheElement {
 		var e=new RowCacheElement(globalRowIndex);
 		this.rowCacheElements.push(e);
