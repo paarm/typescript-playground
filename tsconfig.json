@@ -7,7 +7,7 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "outDir": "www/scripts/app",
-        "sourceMap": true
+        "sourceMap": false
         ,"mapRoot": "scripts/app"
     },
     "files": [

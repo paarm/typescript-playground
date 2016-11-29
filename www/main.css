@@ -65,7 +65,7 @@ th:hover {
     overflow: visible;
     background-color: #dadada;
 }
-
+/*
 .pg2-resize-handle {
     position: absolute;
     background-image: url(../icons/leftright.png);
@@ -75,7 +75,7 @@ th:hover {
     z-index: 1;
     overflow: visible;
 }
-
+*/
 /*.pg2-header-cell:hover {
     background: linear-gradient(to bottom, rgba(66,78,96,1) 0%,rgba(43,56,87,1) 100%);
 }*/
