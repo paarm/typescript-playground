@@ -13,7 +13,7 @@ $(document).ready(function() {
         headerColumns: [
             {
                 id: '1',
-                name: 'Zeilennummer',
+                name: 'Prefix',
             }, 
             {
                 id: '1',
@@ -85,7 +85,7 @@ $(document).ready(function() {
             rowId: i,
             columns: [
                 {
-                    value: '#'+i
+                    value: ""+getRandom(0,10000)
                 },{
                     value: ""+getRandom(1,100)
                 },{
@@ -127,7 +127,7 @@ $(document).ready(function() {
                 rowId: i,
                 columns: [
                     {
-                        value: '#'+(myGrid.gridModel.getRowCount()+i)
+                        value: ""+getRandom(0,1000)
                     },{
                         value: ""+getRandom(1,100)
                     },{

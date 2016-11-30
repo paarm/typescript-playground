@@ -2,7 +2,7 @@ export interface IGridColumn {
     value : string;
 }
 
-interface IGridHeaderColumn {
+export interface IGridHeaderColumn {
     id: string;
     name: string;
     renderer?: (grid: IGridModel, row: IGridRow, column: IGridColumn)=>HTMLElement;

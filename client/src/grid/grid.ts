@@ -1,4 +1,4 @@
-import { IGridModel, GridModel, IGridData, IGridRow} from './gridmodel';
+import { IGridModel, GridModel, IGridData, IGridHeaderColumn, IGridRow} from './gridmodel';
 import {RowCacheHandler, RowRange, RowCacheElement} from './rowcache';
 
 class HeaderCell {
@@ -6,7 +6,9 @@ class HeaderCell {
 	public newWidth: number;
 	public htmlElement: HTMLDivElement;
 	public htmlResizeElement: HTMLDivElement;
+	public htmlTextElement: Text;
 	public viewIndex: number;
+	public modelIndex: number;
 	constructor() {
 	}
 	setOrigWidth(origWidth:number) {
@@ -21,12 +23,21 @@ class HeaderCell {
 	setHTMLRezizeElement(htmlResizeElement:HTMLDivElement) {
 		this.htmlResizeElement=htmlResizeElement;
 	}
+	setHTMLTextElement(htmlTextElement:Text) {
+		this.htmlTextElement=htmlTextElement;
+	}
 	snapshotOrigWidht() {
 		this.origWidth=Math.floor($(this.htmlElement).width());
 		this.newWidth=this.origWidth;
 	}
 	setViewIndex(viewIndex:number) {
 		this.viewIndex=viewIndex;
+	}
+	setModelIndex(modelIndex:number) {
+		this.modelIndex=modelIndex;
+	}
+	setHeaderText(text:string) {
+		this.htmlTextElement.textContent=text;
 	}
 }
 
@@ -56,10 +67,50 @@ class HeaderHandler {
 		}
 	}
 
-	public appendHeaderCell(viewIndex: number) : HeaderCell {
+	public appendIndexCell(pg2_header_row: HTMLDivElement) {
+		var headerCell: HeaderCell=this.appendHeaderCellInternal(pg2_header_row, 0, -1);	
+		headerCell.setHeaderText("#");	
+	}
+	public appendHeaderCell(pg2_header_row: HTMLDivElement, modelIndex: number) : HeaderCell {
+		return this.appendHeaderCellInternal(pg2_header_row, this.headerCellArray.length, modelIndex);	
+	}
+
+	private appendHeaderCellInternal(pg2_header_row: HTMLDivElement, viewIndex: number, modelIndex: number) : HeaderCell {
 		var headerCell:HeaderCell=new HeaderCell();
 		headerCell.setViewIndex(viewIndex);
+		headerCell.setModelIndex(modelIndex);
 		this.headerCellArray.push(headerCell);
+		// outer header cell
+		var columnWidth=100;
+		var columnHeaderElement :HTMLDivElement =<HTMLDivElement>document.createElement("div");
+		columnHeaderElement.style.cssText='width: '+columnWidth+'px;'
+		columnHeaderElement.className="pg2-header-cell pg2-header-cell-unsorted pg2-col-" + modelIndex + "";
+		pg2_header_row.appendChild(columnHeaderElement);
+		// inner header cell content
+		var span:HTMLSpanElement=document.createElement("span");
+		var textElement:Text=document.createTextNode("");
+		
+		span.appendChild(textElement);
+		columnHeaderElement.appendChild(span);
+		// resize handler element
+		var resizeHandleElement: HTMLDivElement = document.createElement("div");
+		resizeHandleElement.style.width=this.resizeHandleElementWidth+"px";
+		columnHeaderElement.appendChild(resizeHandleElement);
+		// save the two html elements
+		headerCell.setHTMLElement(columnHeaderElement);
+		headerCell.setHTMLRezizeElement(resizeHandleElement);
+		headerCell.setHTMLTextElement(textElement);
+		// remember the header cell width
+		headerCell.setOrigWidth(columnWidth);			
+		// add touch/mousedown event handler to the resize element
+		if (this.isTouchDevice) {
+			resizeHandleElement.innerHTML=">";
+			resizeHandleElement.className="pg2-columnResizeHandle-touch";
+			$(resizeHandleElement).bind("touchstart", $.proxy(this.onColumnResizeTouchStart, this, headerCell));
+		} else {
+			resizeHandleElement.className="pg2-columnResizeHandle-notouch";
+			$(resizeHandleElement).bind("mousedown", $.proxy(this.onColumnResizeMouseDown, this, headerCell));
+		}
 		return headerCell;
 	}
 	public getHeaderCellCount() : number {
@@ -292,46 +343,22 @@ export class Grid implements ColumnHeaderCallback {
 			this.pg2_header_row = <HTMLDivElement>document.createElement("div");
 			this.pg2_header_row.className="pg2-header-row";
 			this.pg2_header.appendChild(this.pg2_header_row);
-			// header row
+			// add the cells to the header row
+			this.headerHandler.appendIndexCell(this.pg2_header_row);
+
 			for (var i = 0; i < this.modelColumnsCount; i++) {
-							
-
-				
-				var columnWidth=100;
-				var columnHeaderElement :HTMLDivElement =<HTMLDivElement>document.createElement("div");
-				columnHeaderElement.style.cssText='width: '+columnWidth+'px;'
-				columnHeaderElement.className="pg2-header-cell pg2-header-cell-unsorted pg2-col-" + i + "";
-				this.pg2_header_row.appendChild(columnHeaderElement);
-				var span:HTMLSpanElement=document.createElement("span");
-				var textElement:Text=document.createTextNode(this.mGridModel.getHeaderColumn(i).name);
-				span.appendChild(textElement);
-				columnHeaderElement.appendChild(span);
-				var resizeHandleElement: HTMLDivElement = document.createElement("div");
-				resizeHandleElement.style.width=this.headerHandler.resizeHandleElementWidth+"px";
-				columnHeaderElement.appendChild(resizeHandleElement);
-				// prepare the HeaderCell
-				var headerCell: HeaderCell=this.headerHandler.appendHeaderCell(i);
-				headerCell.setHTMLElement(columnHeaderElement);
-				headerCell.setHTMLRezizeElement(resizeHandleElement);
-				headerCell.setOrigWidth(columnWidth);			
-
-				if (this.headerHandler.isTouchDevice) {
-					resizeHandleElement.innerHTML=">";
-					resizeHandleElement.className="pg2-columnResizeHandle-touch";
-					$(resizeHandleElement).bind("touchstart", $.proxy(this.headerHandler.onColumnResizeTouchStart, this.headerHandler, headerCell));
-				} else {
-					resizeHandleElement.className="pg2-columnResizeHandle-notouch";
-					$(resizeHandleElement).bind("mousedown", $.proxy(this.headerHandler.onColumnResizeMouseDown, this.headerHandler, headerCell));
-				}
+				var headerCell:HeaderCell=this.headerHandler.appendHeaderCell(this.pg2_header_row, i);
+				headerCell.setHeaderText(this.mGridModel.getHeaderColumn(i).name);
 			}
+			// calcualte the viewport height which can be used for the rows (full height-header height)
 			this.canvasProperties.headerHeight=this.pg2_header.clientHeight;
 			this.canvasProperties.viewportHightForRowsInPixel=this.height-this.canvasProperties.headerHeight;
-			// body
+			// create the row viewport
 			this.pg2_viewport=document.createElement("div");
 			this.pg2_viewport.style.cssText="height: "+this.canvasProperties.viewportHightForRowsInPixel+"px;";
 			this.pg2_viewport.className="pg2-viewport";
-
 			this.pg2.appendChild(this.pg2_viewport);
+			// create the row canvas 
 			this.pg2_canvas = document.createElement("div");
 			//this.pg2_canvas.style.cssText="width: " + (this.modelColumnsCount * 103.6) + "px; height: 30px;";
 			this.pg2_canvas.className="pg2-canvas";
@@ -381,16 +408,21 @@ export class Grid implements ColumnHeaderCallback {
 		console.log("renderer called with scroll top: "+this.canvasProperties.scrollTop);
 
 		if (this.modelRowCount>0) {
+			// calculate the row range of the current scroll position
 			this.canvasProperties.nextRowRange.from=this.calculateModelRowIndexForFirstDomRow(this.canvasProperties.scrollTop);
 			var rangeToIndex=Math.min(this.modelRowCount-1,this.canvasProperties.nextRowRange.from+this.canvasProperties.maxRowCount-1);
 			this.canvasProperties.nextRowRange.to=Math.max(this.canvasProperties.nextRowRange.from,rangeToIndex);
+			// delete rows which are outside of the current row range
 			this.rowCacheHandler.deleteOutsideRowCacheElements(this.pg2_canvas, this.canvasProperties.nextRowRange);
+			// add missing rows which are now inside the row range
 			var addedRowCacheElements:RowCacheElement[]=this.rowCacheHandler.addNotExistingRowCacheElements(this.canvasProperties.nextRowRange);
 		} else {
+			// remove all rows
 			this.canvasProperties.nextRowRange.from=-1;
 			this.canvasProperties.nextRowRange.to=-1;
 			this.rowCacheHandler.deleteOutsideRowCacheElements(this.pg2_canvas, this.canvasProperties.nextRowRange);
 		}
+		// add the html elements of the missing rows (before added)
 		if (addedRowCacheElements!=null && addedRowCacheElements.length>0) {
 			for (var i=0, count=addedRowCacheElements.length;i<count;i++) {
 				console.log("add row with index "+addedRowCacheElements[i].globalRowIndex);
@@ -412,12 +444,12 @@ export class Grid implements ColumnHeaderCallback {
 		row.className="pg2-row pg2-row-" + domRowIndex + " pg2-row-"+evenodd;
 		row.style.cssText="top: " + (this.canvasProperties.rowHeightInPixel * domRowIndex) + "px;";
 		//var row: JQuery = $("<div class='pg2-row pg2-row-" + domRowIndex + " pg2-row-"+evenodd+"' style='top: " + (this.rowHeight * domRowIndex) + "px;'></div>");
-		this.buildHTMLCell(row,domRowIndex);
+		this.buildHTMLCells(row,domRowIndex);
 		return row;
 	}
 
-	buildHTMLCell(row: HTMLDivElement, domRowIndex: number) {
-		for (var i = 0; i < this.modelColumnsCount; i++) {
+	buildHTMLCells(row: HTMLDivElement, domRowIndex: number) {
+		for (var i = 0; i < this.headerHandler.getHeaderCellCount(); i++) {
 			var col: HTMLDivElement = <HTMLDivElement> document.createElement("div");
 			col.className="pg2-cell pg2-col-" + i;
 			col.style.width=this.headerHandler.getHeaderCellFromIndex(i).origWidth+"px";
@@ -428,22 +460,28 @@ export class Grid implements ColumnHeaderCallback {
 
 	updateInnerCellContent(rowCacheElement: RowCacheElement) {
 		if (rowCacheElement.globalRowIndex>=0) {
-			let columnCount: number=rowCacheElement.htmlElement.childElementCount;
 			let modelGridRow: IGridRow=this.gridModel.getRow(rowCacheElement.globalRowIndex);
-			for (var i=0;i<columnCount;i++) {
+			for (var i = 0; i < this.headerHandler.getHeaderCellCount(); i++) {
 				var columnElement: HTMLDivElement=<HTMLDivElement>rowCacheElement.htmlElement.childNodes[i];
 				while(columnElement.firstChild!=null) {
 					columnElement.removeChild(columnElement.firstChild);
 				}
-				if (this.gridModel.getHeaderColumn(i).renderer!=null) {
-					let customRenderedElement:HTMLElement=this.gridModel.getHeaderColumn(i).renderer(this.gridModel, modelGridRow, modelGridRow.columns[i]);
-					if (customRenderedElement!=null) {
-						//columnElement.childNodes.innerHTML="";
-						columnElement.appendChild(customRenderedElement);
-					}
-				} else {
-					var textElement: Text=document.createTextNode(modelGridRow.columns[i].value);
+
+				var headerCell:HeaderCell=this.headerHandler.getHeaderCellFromIndex(i);	
+				if (headerCell.modelIndex==-1) {
+					var textElement: Text=document.createTextNode(""+(rowCacheElement.globalRowIndex+1));
 					columnElement.appendChild(textElement);//modelGridRow.columns[i].value;
+				} else {
+					if (this.gridModel.getHeaderColumn(headerCell.modelIndex).renderer!=null) {
+						let customRenderedElement:HTMLElement=this.gridModel.getHeaderColumn(headerCell.modelIndex).renderer(this.gridModel, modelGridRow, modelGridRow.columns[headerCell.modelIndex]);
+						if (customRenderedElement!=null) {
+							//columnElement.childNodes.innerHTML="";
+							columnElement.appendChild(customRenderedElement);
+						}
+					} else {
+						var textElement: Text=document.createTextNode(modelGridRow.columns[headerCell.modelIndex].value);
+						columnElement.appendChild(textElement);//modelGridRow.columns[i].value;
+					}
 				}
 			}
 		}
