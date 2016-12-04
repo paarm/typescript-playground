@@ -3,12 +3,21 @@ export class RowRange {
 }
 
 export class RowCacheElement {
-	public htmlElement:HTMLDivElement;
-	constructor(public globalRowIndex: number) {}
+	private mHtmlElement:HTMLDivElement;
+	constructor(private mGlobalRowIndex: number) {}
+	public set htmlElement(htmlElement:HTMLDivElement) {
+		this.mHtmlElement=htmlElement;
+	}
+	public get htmlElement() : HTMLDivElement {
+		return this.mHtmlElement;
+	}
+	public get globalRowIndex() : number {
+		return this.mGlobalRowIndex;
+	}
 }
 
 export class RowCacheHandler {
-	public rowCacheElements: RowCacheElement[]=[];
+	private rowCacheElements: RowCacheElement[]=[];
 
 	public getRowCacheElementCount():number {
 		return this.rowCacheElements.length;
@@ -33,25 +42,32 @@ export class RowCacheHandler {
 		return e;
 	}
 
-	public deleteOutsideRowCacheElements(parentHTMLElement: HTMLDivElement, rowRange : RowRange) {
+	public deleteOutsideRowCacheElements(rowRange : RowRange) : RowCacheElement[] {
+		var tmpRowCacheElements : RowCacheElement[]=null;
 		var count=this.rowCacheElements.length;
 		for(var i=count-1;i>=0;i--) {
-			if (this.rowCacheElements[i].globalRowIndex<rowRange.from||
-			this.rowCacheElements[i].globalRowIndex>rowRange.to) {
-				parentHTMLElement.removeChild(this.rowCacheElements[i].htmlElement);
+			if (this.rowCacheElements[i].globalRowIndex<rowRange.from||this.rowCacheElements[i].globalRowIndex>rowRange.to) {
+				if (tmpRowCacheElements==null) {
+					tmpRowCacheElements=[];
+				}
+				tmpRowCacheElements.push(this.rowCacheElements[i]);
 				this.rowCacheElements.splice(i,1);
 				//delete this.rowCacheElements[i];
 			}
 		}		
+		return tmpRowCacheElements;
 	}
 
 	public addNotExistingRowCacheElements(rowRange : RowRange) : RowCacheElement[] {
-		var addedRowCacheElements : RowCacheElement[]=[];
+		var tmpRowCacheElements : RowCacheElement[]=null;
 		for (var i=rowRange.from; i<rowRange.to+1;i++) {
 			if (this.searchRowCacheElementByGlobalRowIndex(i)==null) {
-				addedRowCacheElements.push(this.addRowCacheEntry(i));
+				if (tmpRowCacheElements==null) {
+					tmpRowCacheElements=[];
+				}
+				tmpRowCacheElements.push(this.addRowCacheEntry(i));
 			}
 		}
-		return addedRowCacheElements;
+		return tmpRowCacheElements;
 	}
 }

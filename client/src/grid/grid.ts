@@ -2,41 +2,67 @@ import { IGridModel, GridModel, IGridData, IGridHeaderColumn, IGridRow} from './
 import {RowCacheHandler, RowRange, RowCacheElement} from './rowcache';
 
 class HeaderCell {
-	public origWidth: number;
-	public newWidth: number;
-	public htmlElement: HTMLDivElement;
-	public htmlResizeElement: HTMLDivElement;
-	public htmlTextElement: Text;
-	public viewIndex: number;
-	public modelIndex: number;
+	private mWidth: number;
+	public get width() : number {
+		return this.mWidth;
+	}
+	public set width(width:number) {
+		this.mWidth=width;
+	}
+
+	private mTmpResizedWidth: number;
+	public get tmpResizedWidth() : number {
+		return this.mTmpResizedWidth;
+	}
+	public set tmpResizedWidth(tmpWidth:number) {
+		this.mTmpResizedWidth=tmpWidth;
+	}
+
+	private mHtmlElement: HTMLDivElement;
+	public get htmlElement() : HTMLDivElement {
+		return this.mHtmlElement;
+	}
+	public set htmlElement(htmlElement:HTMLDivElement) {
+		this.mHtmlElement=htmlElement;
+		this.width=Math.floor($(this.htmlElement).width());
+		this.tmpResizedWidth=this.width;
+	}
+
+	public mHtmlResizeElement: HTMLDivElement;
+	public get htmlResizeElement() : HTMLDivElement {
+		return this.mHtmlResizeElement;
+	}
+	public set htmlResizeElement(htmlElement:HTMLDivElement) {
+		this.mHtmlResizeElement=htmlElement;
+	}
+
+	public mHtmlTextElement: Text;
+	public get htmlTextElement() : Text {
+		return this.mHtmlTextElement;
+	}
+	public set htmlTextElement(htmlElement:Text) {
+		this.mHtmlTextElement=htmlElement;
+	}
+
+	private mViewIndex: number;
+	public set viewIndex(viewIndex:number) {
+		this.mViewIndex=viewIndex;
+	}
+	public get viewIndex() : number {
+		return this.mViewIndex;
+	}
+
+	private mModelIndex: number;
+	public set modelIndex(modelIndex:number) {
+		this.mModelIndex=modelIndex;
+	}
+	public get modelIndex() : number {
+		return this.mModelIndex;
+	}
+	
 	constructor() {
 	}
-	setOrigWidth(origWidth:number) {
-		this.origWidth=origWidth;
-	}
-	setNewWidth(newWidth:number) {
-		this.newWidth=newWidth;
-	}
-	setHTMLElement(htmlElement:HTMLDivElement) {
-		this.htmlElement=htmlElement;
-	}
-	setHTMLRezizeElement(htmlResizeElement:HTMLDivElement) {
-		this.htmlResizeElement=htmlResizeElement;
-	}
-	setHTMLTextElement(htmlTextElement:Text) {
-		this.htmlTextElement=htmlTextElement;
-	}
-	snapshotOrigWidht() {
-		this.origWidth=Math.floor($(this.htmlElement).width());
-		this.newWidth=this.origWidth;
-	}
-	setViewIndex(viewIndex:number) {
-		this.viewIndex=viewIndex;
-	}
-	setModelIndex(modelIndex:number) {
-		this.modelIndex=modelIndex;
-	}
-	setHeaderText(text:string) {
+	public set headerText(text:string) {
 		this.htmlTextElement.textContent=text;
 	}
 }
@@ -50,8 +76,14 @@ interface ColumnHeaderCallback {
 	onColumnResizeEnded: ()=>void;
 }
 
+class ColumnIndex {
+	public viewIndex:number;
+	public modelIndex:number;
+}
+
 class HeaderHandler {
 	headerCellArray: HeaderCell[]=[];
+	//headerCellViewIndex: ColumnIndex[]=[];
 	columnResizeContext : ColumnResizeContext=new ColumnResizeContext();
 	headerColumnMinWidth: number=30;
 	resizeHandleElementWidth: number=15;
@@ -66,22 +98,43 @@ class HeaderHandler {
 			this.headerColumnMinWidth=65;
 		}
 	}
-
+/*
+	private buildViewindex() {
+		var diff=this.headerCellArray.length-this.headerCellViewIndex.length;
+		if (diff<0) {
+			diff=-diff;
+			for (var i=0;i<diff;i++) {
+				this.headerCellViewIndex.pop();
+			}
+		} else {
+			for (var i=0;i<diff;i++) {
+				this.headerCellViewIndex.push(new ColumnIndex);
+			}
+		}
+		for (var i=0;i<this.headerCellViewIndex.length;i++) {
+			this.headerCellViewIndex[i].modelIndex=this.headerCellArray[i].modelIndex;
+			this.headerCellViewIndex[i].viewIndex=this.headerCellArray[i].viewIndex;
+		}
+		this.headerCellViewIndex.sort((a:ColumnIndex, b:ColumnIndex)=>{
+			return a.viewIndex<b.viewIndex?-1:a.viewIndex>b.viewIndex?1:0;
+		});
+	}
+*/
 	public appendIndexCell(pg2_header_row: HTMLDivElement) {
-		var headerCell: HeaderCell=this.appendHeaderCellInternal(pg2_header_row, 0, -1);	
-		headerCell.setHeaderText("#");	
+		var headerCell: HeaderCell=this.appendHeaderCellInternal(pg2_header_row, this.headerCellArray.length, -1, 30);	
+		headerCell.headerText="#";	
 	}
-	public appendHeaderCell(pg2_header_row: HTMLDivElement, modelIndex: number) : HeaderCell {
-		return this.appendHeaderCellInternal(pg2_header_row, this.headerCellArray.length, modelIndex);	
+	public appendHeaderCell(pg2_header_row: HTMLDivElement, modelIndex: number, columnWidth?:number) : HeaderCell {
+		return this.appendHeaderCellInternal(pg2_header_row, this.headerCellArray.length, modelIndex, columnWidth);	
 	}
 
-	private appendHeaderCellInternal(pg2_header_row: HTMLDivElement, viewIndex: number, modelIndex: number) : HeaderCell {
+	private appendHeaderCellInternal(pg2_header_row: HTMLDivElement, viewIndex: number, modelIndex: number, columnWidth: number) : HeaderCell {
 		var headerCell:HeaderCell=new HeaderCell();
-		headerCell.setViewIndex(viewIndex);
-		headerCell.setModelIndex(modelIndex);
+		headerCell.viewIndex=viewIndex;
+		headerCell.modelIndex=modelIndex;
 		this.headerCellArray.push(headerCell);
 		// outer header cell
-		var columnWidth=100;
+		var columnWidth=columnWidth;
 		var columnHeaderElement :HTMLDivElement =<HTMLDivElement>document.createElement("div");
 		columnHeaderElement.style.cssText='width: '+columnWidth+'px;'
 		columnHeaderElement.className="pg2-header-cell pg2-header-cell-unsorted pg2-col-" + modelIndex + "";
@@ -97,11 +150,9 @@ class HeaderHandler {
 		resizeHandleElement.style.width=this.resizeHandleElementWidth+"px";
 		columnHeaderElement.appendChild(resizeHandleElement);
 		// save the two html elements
-		headerCell.setHTMLElement(columnHeaderElement);
-		headerCell.setHTMLRezizeElement(resizeHandleElement);
-		headerCell.setHTMLTextElement(textElement);
-		// remember the header cell width
-		headerCell.setOrigWidth(columnWidth);			
+		headerCell.htmlElement=columnHeaderElement;
+		headerCell.htmlResizeElement=resizeHandleElement;
+		headerCell.htmlTextElement=textElement;
 		// add touch/mousedown event handler to the resize element
 		if (this.isTouchDevice) {
 			resizeHandleElement.innerHTML=">";
@@ -120,9 +171,6 @@ class HeaderHandler {
 		return this.headerCellArray[index]; 
 	}
 	public onResizeColumnBegin(headerCell: HeaderCell, initialPageX: number) {
-		for (var i=0;i<this.headerCellArray.length;i++) {
-			this.headerCellArray[i].snapshotOrigWidht();
-		}
 		this.columnResizeContext.headerCell=headerCell;
 		this.columnResizeContext.initialPageX=initialPageX;
 	}
@@ -148,6 +196,7 @@ class HeaderHandler {
 
 			$(document).unbind("mousemove.pg2");
 			$(document).unbind("mouseup.pg2");
+			this.columnResizeContext.headerCell.width=this.columnResizeContext.headerCell.tmpResizedWidth
 			this.columnHeaderCallback.onColumnResizeEnded.call(this.columnHeaderCallback);
 			this.columnResizeContext.headerCell = null;
 		}
@@ -158,6 +207,7 @@ class HeaderHandler {
 			headerCell.htmlResizeElement.className="pg2-columnResizeHandle-touch";
 			$(headerCell.htmlResizeElement).unbind("tochmove.gp2");
 			$(headerCell.htmlResizeElement).unbind("touchend.gp2");
+			this.columnResizeContext.headerCell.width=this.columnResizeContext.headerCell.tmpResizedWidth
 			this.columnHeaderCallback.onColumnResizeEnded.call(this.columnHeaderCallback);
 			this.columnResizeContext.headerCell = null;
 		}
@@ -183,13 +233,13 @@ class HeaderHandler {
 	onColumnUpdateResize(pageX:number) {
 		console.log("on column resize update. X: "+ pageX);
 		var moveDistance=pageX-this.columnResizeContext.initialPageX;
-		var newWidth=Math.floor(this.columnResizeContext.headerCell.origWidth+moveDistance);
+		var newWidth=Math.floor(this.columnResizeContext.headerCell.width+moveDistance);
 		if (newWidth<this.headerColumnMinWidth) {
 			newWidth=this.headerColumnMinWidth;
 		}
-		var diff=Math.abs(this.columnResizeContext.headerCell.newWidth-newWidth);
+		var diff=Math.abs(this.columnResizeContext.headerCell.tmpResizedWidth-newWidth);
 		if (diff>=1) {
-			this.columnResizeContext.headerCell.newWidth=newWidth;
+			this.columnResizeContext.headerCell.tmpResizedWidth=newWidth;
 			this.columnResizeContext.headerCell.htmlElement.style.width=newWidth+"px";
 		}
 	}
@@ -347,8 +397,8 @@ export class Grid implements ColumnHeaderCallback {
 			this.headerHandler.appendIndexCell(this.pg2_header_row);
 
 			for (var i = 0; i < this.modelColumnsCount; i++) {
-				var headerCell:HeaderCell=this.headerHandler.appendHeaderCell(this.pg2_header_row, i);
-				headerCell.setHeaderText(this.mGridModel.getHeaderColumn(i).name);
+				var headerCell:HeaderCell=this.headerHandler.appendHeaderCell(this.pg2_header_row, i, this.mGridModel.getHeaderColumn(i).width||100);
+				headerCell.headerText=this.mGridModel.getHeaderColumn(i).name;
 			}
 			// calcualte the viewport height which can be used for the rows (full height-header height)
 			this.canvasProperties.headerHeight=this.pg2_header.clientHeight;
@@ -379,8 +429,8 @@ export class Grid implements ColumnHeaderCallback {
 		var count=this.rowCacheHandler.getRowCacheElementCount();
 		for (var i=0;i<count;i++) {
 			var col=<HTMLDivElement>this.rowCacheHandler.getRowCacheElementByIndex(i).htmlElement.children[this.headerHandler.columnResizeContext.headerCell.viewIndex];
-			col.style.width=this.headerHandler.columnResizeContext.headerCell.newWidth+"px";
-			this.headerHandler.columnResizeContext.headerCell.origWidth=this.headerHandler.columnResizeContext.headerCell.newWidth;
+			col.style.width=this.headerHandler.columnResizeContext.headerCell.tmpResizedWidth+"px";
+			//this.headerHandler.columnResizeContext.headerCell.width=this.headerHandler.columnResizeContext.headerCell.tmpResizedWidth;
 		}
 		console.log("on column resize ended");
 	}
@@ -413,14 +463,21 @@ export class Grid implements ColumnHeaderCallback {
 			var rangeToIndex=Math.min(this.modelRowCount-1,this.canvasProperties.nextRowRange.from+this.canvasProperties.maxRowCount-1);
 			this.canvasProperties.nextRowRange.to=Math.max(this.canvasProperties.nextRowRange.from,rangeToIndex);
 			// delete rows which are outside of the current row range
-			this.rowCacheHandler.deleteOutsideRowCacheElements(this.pg2_canvas, this.canvasProperties.nextRowRange);
+			var deletedRowCacheElements=this.rowCacheHandler.deleteOutsideRowCacheElements(this.canvasProperties.nextRowRange);
 			// add missing rows which are now inside the row range
 			var addedRowCacheElements:RowCacheElement[]=this.rowCacheHandler.addNotExistingRowCacheElements(this.canvasProperties.nextRowRange);
 		} else {
 			// remove all rows
 			this.canvasProperties.nextRowRange.from=-1;
 			this.canvasProperties.nextRowRange.to=-1;
-			this.rowCacheHandler.deleteOutsideRowCacheElements(this.pg2_canvas, this.canvasProperties.nextRowRange);
+			var deletedRowCacheElements=this.rowCacheHandler.deleteOutsideRowCacheElements(this.canvasProperties.nextRowRange);
+		}
+		// delete the html elements of the removed rows
+		if (deletedRowCacheElements!=null && deletedRowCacheElements.length>0) {
+			for (var i=0, count=deletedRowCacheElements.length;i<count;i++) {
+				console.log("delete row with index "+deletedRowCacheElements[i].globalRowIndex);
+				this.pg2_canvas.removeChild(deletedRowCacheElements[i].htmlElement);
+			}
 		}
 		// add the html elements of the missing rows (before added)
 		if (addedRowCacheElements!=null && addedRowCacheElements.length>0) {
@@ -452,7 +509,7 @@ export class Grid implements ColumnHeaderCallback {
 		for (var i = 0; i < this.headerHandler.getHeaderCellCount(); i++) {
 			var col: HTMLDivElement = <HTMLDivElement> document.createElement("div");
 			col.className="pg2-cell pg2-col-" + i;
-			col.style.width=this.headerHandler.getHeaderCellFromIndex(i).origWidth+"px";
+			col.style.width=this.headerHandler.getHeaderCellFromIndex(i).width+"px";
 			row.appendChild(col);			
 			//row.append($("<div class='pg2-cell pg2-col-" + i + "' style='width: 100px;'></div>"));
 		}

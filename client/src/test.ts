@@ -14,6 +14,7 @@ $(document).ready(function() {
             {
                 id: '1',
                 name: 'Prefix',
+                width: 40
             }, 
             {
                 id: '1',
